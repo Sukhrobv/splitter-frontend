@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useAppStore } from '../../src/shared/lib/stores/app-store';
+import { useAppStore } from '../../shared/lib/stores/app-store';
 
 export default function HomeScreen() {
   const { theme, language, setTheme, setLanguage } = useAppStore();

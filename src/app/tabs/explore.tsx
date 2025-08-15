@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import { commonStyles } from '../../src/shared/ui/styles';
+import { commonStyles } from '../../shared/ui/styles';
 
 export default function ExploreScreen() {
   return (
