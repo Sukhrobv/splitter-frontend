@@ -1,10 +1,12 @@
 import { Stack } from 'expo-router';
-// Убрали import '../global.css';
+import AppProviders from '../src/app/providers/AppProviders';
 
 export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <AppProviders>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </AppProviders>
   );
 }

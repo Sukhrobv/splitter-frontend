@@ -2,6 +2,7 @@
   "expo": {
     "name": "Receipt Splitter",
     "slug": "receipt-splitter",
+    "scheme": "receipt-splitter",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",

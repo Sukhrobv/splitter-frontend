@@ -1,7 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { lightTheme } from './theme';
 
-// Базовые переиспользуемые стили
 export const commonStyles = StyleSheet.create({
   // Контейнеры
   container: {
@@ -14,6 +13,7 @@ export const commonStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: lightTheme.colors.background,
+    padding: lightTheme.spacing.lg,
   },
   
   // Текст
@@ -38,11 +38,19 @@ export const commonStyles = StyleSheet.create({
     paddingVertical: lightTheme.spacing.md,
     borderRadius: 8,
     alignItems: 'center',
+    minWidth: 150,
+    marginBottom: lightTheme.spacing.sm,
   },
   
   buttonText: {
     color: lightTheme.colors.white,
     fontSize: lightTheme.fontSize.base,
     fontWeight: '600',
+  },
+  
+  // Контейнер для кнопок (убрали gap)
+  buttonContainer: {
+    marginTop: lightTheme.spacing.lg,
+    alignItems: 'center',
   },
 });
