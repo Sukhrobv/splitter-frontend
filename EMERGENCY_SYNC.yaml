@@ -1,0 +1,51 @@
+# EMERGENCY_SYNC.yaml — минимальная аварийная синхронизация (SPMS)
+# Используется, если чат оборвался ДО выпуска новой версии STATUS.yaml.
+# Поля — минимально достаточные для восстановления контекста и продолжения работы по текущему этапу. :contentReference[oaicite:23]{index=23}
+
+emergency_sync_version: 1
+timestamp: "2025-08-15T19:42:10+05:00"   # ISO-8601, Ташкент (UTC+05:00) :contentReference[oaicite:24]{index=24}
+actor: "AI"                              # Кто создаёт снимок: "User" | "AI"
+reason: "chat_interrupted"               # Причина: chat_interrupted | validation_failed | other
+
+context:
+  description_ref: "./DESCRIPTION.md"    # Отсылки на актуальные артефакты
+  roadmap_ref: "./ROADMAP.md"
+  rules_ref: "./RULES.md"
+  status_ref: "./STATUS.yaml"            # Последняя валидная версия
+
+position:
+  roadmap_chapter_id: "CH-01"            # ID главы из ROADMAP.md
+  roadmap_stage_id: "ST-01-03"           # ID этапа из ROADMAP.md (текущий) :contentReference[oaicite:25]{index=25}
+
+work_snapshot:
+  done_brief:                            # Кратко: что сделано в текущем чате (черновик для STATUS.yaml)
+    - "Подключены и настроены Expo Router и i18n (ja/en)."
+  next_brief:                            # Кратко: что далее (строго в рамках текущего этапа)
+    - "Добавить экран Login и связать с навигацией."
+  decisions:
+    - "Выбран Expo + EAS (Build/OTA) для дистрибуции."
+  open_questions:
+    - "Нужны ли дополнительные локали помимо ja/en?"
+  evidence:                              # Быстрые указатели, без жёстких требований к формату
+    commits:
+      - "feat: init expo-router and locales [abc1234]"
+    links:
+      - "https://github.com/org/repo/commit/abc1234"
+    files:
+      - "./app/_layout.tsx"
+      - "./i18n/config.ts"
+  risks_blockers:
+    - "Конфликт версий RN/Expo — требуется синхронизация зависимостей."
+
+metadata:
+  stack:
+    frontend: ["Expo SDK 53", "React Native 0.79", "expo-router 5.x", "TypeScript"]
+  notes:
+    - "Этот YAML — временный снапшот, не заменяет STATUS.yaml."
+    - "При первом удобном случае оформить полноценную запись STATUS.yaml (валидировать по схеме)."
+
+# Процедура восстановления:
+# 1) При старте нового чата загрузить EMERGENCY_SYNC.yaml.
+# 2) ИИ подтверждает позицию в ROADMAP.md и актуальные дату/время (UTC+05:00).
+# 3) Оформляет полноценную запись STATUS.yaml на основе этого слепка (новый status_id).
+# 4) Запрашивает у пользователя подтверждение перехода/продолжения текущего этапа. :contentReference[oaicite:26]{index=26}

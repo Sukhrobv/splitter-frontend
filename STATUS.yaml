@@ -1,0 +1,69 @@
+# STATUS.yaml
+
+# STATUS.yaml — единственный источник правды о прогрессе проекта SPMS
+# Каждая запись имеет уникальный status_id и не редактируется после создания
+
+status_entries:
+  - status_id: "spms_001"
+    timestamp: "2025-08-15T[18:49]+05:00"  # ← НУЖНО УТОЧНИТЬ ВРЕМЯ
+    roadmap_ref: "1.2"  # Этап 1.2 — Архитектурный каркас
+    
+    done:
+      - "Создан проект на Expo SDK 53 с TypeScript"
+      - "Настроена навигация expo-router v5.1.4 с табовой структурой"
+      - "Установлены основные зависимости архитектуры (Zustand, React Query, Zod, etc.)"
+      - "Создана собственная система стилизации вместо NativeWind"
+      - "Решены все конфликты конфигураций Babel/Metro"
+      - "Обновлена документация ARCHITECTURE.md с реальными версиями"
+      - "Подключен проект к GitHub репозиторию"
+      
+    evidence:
+      - "GitHub репозиторий: https://github.com/Sukhrobv/splitter-frontend"
+      - "Git коммиты: d924c5c, 50c7917, e352384"
+      - "Рабочее приложение с табами Home/Explore в Expo Go"
+      - "package.json с установленными зависимостями SDK 53"
+      - "Файлы конфигурации: babel.config.js, tsconfig.json, app.json"
+      - "Структура папок src/shared/ui/ с theme.ts и styles.ts"
+      
+    next:
+      - "Завершить Этап 1.2: настроить провайдеры (QueryClient, Zustand store)"
+      - "Создать полную Feature-Sliced Design структуру папок"  
+      - "Настроить i18n для японского/английского языков"
+      - "Переход к Этапу 1.3 или 2.1 по решению пользователя"
+      
+    decisions:
+      - "Отказ от NativeWind из-за конфликтов с Babel в SDK 53"
+      - "Использование собственной системы стилизации на StyleSheet"
+      - "Репозиторий: https://github.com/Sukhrobv/splitter-frontend"
+      - "Основная ветка: main"
+      
+    stack:
+      expo: "~53.0.20"
+      react: "19.0.0"
+      react_native: "0.79.5" 
+      expo_router: "~5.1.4"
+      zustand: "^5.0.7"
+      react_query: "^5.85.3"
+      react_hook_form: "^7.62.0"
+      zod: "^4.0.17"
+      typescript: "^5.8.3"
+      
+    open_questions:
+      - "Выбор между продолжением Этапа 1.2 (провайдеры) или переходом к 2.1 (auth screens)"
+      - "Необходимость настройки CI/CD на данном этапе"
+      - "Детали интеграции с backend API"
+      
+    metrics:
+      dependencies_installed: 15
+      config_files_created: 4
+      screens_implemented: 2
+      git_commits: 3
+      documentation_files: 1
+      
+    notes:
+      - "Этап 1.2 практически завершён, осталась настройка провайдеров"
+      - "Проект стабильно работает в Expo Go без ошибок"
+      - "Готова основа для дальнейшей разработки фич"
+
+schema_version: "1.0"
+project: "SPMS Receipt Splitter Frontend"
