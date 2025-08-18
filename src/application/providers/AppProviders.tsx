@@ -1,18 +1,14 @@
 import { ReactNode } from 'react';
 import QueryProvider from './QueryProvider';
-import StoreProvider from './StoreProvider';
 import I18nProvider from './I18nProvider';
+import { AppStoreProvider } from '@/shared/lib/stores/app-store';
 
-interface AppProvidersProps {
-  children: ReactNode;
-}
-
-export default function AppProviders({ children }: AppProvidersProps) {
+export default function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <StoreProvider>
+    <AppStoreProvider>
       <QueryProvider>
         <I18nProvider>{children}</I18nProvider>
       </QueryProvider>
-    </StoreProvider>
+    </AppStoreProvider>
   );
 }
