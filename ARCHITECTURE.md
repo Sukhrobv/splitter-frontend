@@ -9,7 +9,7 @@
 * **Стейт:** Zustand v5.0.7 (глобальный стейт) + React Query v5.85.3 (серверные данные, кэш, офлайн-режим).
 * **Формы и валидация:** React Hook Form v7.62.0 + Zod v4.0.17.
 * **Стилизация:** Собственная система стилей на основе StyleSheet, дизайн-токены, поддержка light/dark themes.
-* **Локализация:** react-i18next v15.6.1 + expo-localization v16.1.6, поддержка ja/en.
+* **Локализация:** react-i18next v15.6.1 + expo-localization v16.1.6, поддержка ja/en, конфигурация в `src/shared/config/i18n.ts`.
 * **Сеть:** Axios v1.11.0 с интерсепторами (auth, lang header, cancellation, retry).
 * **Тестирование:** Jest + React Native Testing Library; e2e (Detox или Maestro при необходимости).
 
@@ -37,7 +37,7 @@
 ## 3. Архитектурный подход
 
 * **Feature-Sliced Design**:
-  * `src/app/` — конфигурация провайдеров (QueryClient, стейт менеджеры).
+  * `src/app/` — конфигурация провайдеров (QueryClient, Zustand, i18n).
   * `app/` — роутинг expo-router (layouts, screens).
   * `src/features/*` — экраны и бизнес-логика конкретных функций.
   * `src/entities/*` — модели, схемы валидации Zod, мапперы.
