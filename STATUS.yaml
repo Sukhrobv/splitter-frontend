@@ -82,5 +82,24 @@ status_entries:
     next:
       - "Решить, переходить ли к этапу 1.3 или 2.1"
 
+  - status_id: "spms_003"
+    timestamp: "2025-08-18T18:06:59+00:00"
+    roadmap_ref: "2.1"
+
+    done:
+      - "Добавлены экраны Welcome, Login, Register"
+      - "Реализованы функции auth login/register с сохранением токена"
+      - "Настроены guarded routes на основе токена"
+
+    evidence:
+      - "src/index.tsx"
+      - "src/login.tsx"
+      - "src/register.tsx"
+      - "src/features/auth/api/index.ts"
+      - "src/_layout.tsx"
+
+    next:
+      - "Интегрировать реальные вызовы API и обработку ошибок"
+
 schema_version: "1.0"
 project: "SPMS Receipt Splitter Frontend"

@@ -4,17 +4,16 @@ import * as Localization from 'expo-localization';
 import en from './locales/en.json';
 import ja from './locales/ja.json';
 
-void i18n
-  .use(initReactI18next)
-  .init({
-    compatibilityJSON: 'v3',
-    resources: {
-      en: { translation: en },
-      ja: { translation: ja },
-    },
-    lng: Localization.locale.split('-')[0],
-    fallbackLng: 'en',
-    interpolation: { escapeValue: false },
-  });
+const locale = Localization.getLocales()[0]?.languageCode ?? 'en';
+
+void i18n.use(initReactI18next).init({
+  resources: {
+    en: { translation: en },
+    ja: { translation: ja },
+  },
+  lng: locale,
+  fallbackLng: 'en',
+  interpolation: { escapeValue: false },
+});
 
 export default i18n;
