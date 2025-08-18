@@ -65,5 +65,43 @@ status_entries:
       - "Проект стабильно работает в Expo Go без ошибок"
       - "Готова основа для дальнейшей разработки фич"
 
+  - status_id: "spms_002"
+    timestamp: "2025-08-18T22:18:56+05:00"
+    roadmap_ref: "1.2"
+
+    done:
+      - "Настроены провайдеры QueryClient и Zustand"
+      - "Создана полная структура папок Feature-Sliced Design"
+      - "Настроен i18n для английского и японского языков"
+
+    evidence:
+      - "src/app/providers/StoreProvider.tsx"
+      - "src/shared/config/i18n.ts"
+      - "директории src/features/* и src/entities/*"
+
+    next:
+      - "Решить, переходить ли к этапу 1.3 или 2.1"
+
+  - status_id: "spms_003"
+    timestamp: "2025-08-18T22:42:48+05:00"
+    roadmap_ref: "2.1"
+
+    done:
+      - "Созданы базовые экраны Welcome, Login и Register"
+      - "Добавлен простой guard маршрутов на основе токена"
+      - "Настроено хранение токена в SecureStore"
+
+    evidence:
+      - "src/(auth)/welcome.tsx"
+      - "src/(auth)/login.tsx"
+      - "src/_layout.tsx"
+
+    next:
+      - "Интегрировать API /auth/register и /auth/login"
+      - "Реализовать защищённые маршруты для всего приложения"
+
+    decisions:
+      - "Этап 1.3 (CI/CD и тестирование) пропущен по решению пользователя"
+
 schema_version: "1.0"
 project: "SPMS Receipt Splitter Frontend"

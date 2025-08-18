@@ -3,7 +3,12 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useAppStore } from '../../shared/lib/stores/app-store';
 
 export default function HomeScreen() {
-  const { theme, language, setTheme, setLanguage } = useAppStore();
+  const { theme, language, setTheme, setLanguage } = useAppStore((s) => ({
+    theme: s.theme,
+    language: s.language,
+    setTheme: s.setTheme,
+    setLanguage: s.setLanguage,
+  }));
 
   const containerStyle = {
     flex: 1,
