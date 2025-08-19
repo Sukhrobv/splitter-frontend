@@ -1,0 +1,46 @@
+// src/shared/config/theme.ts
+import { createTheme } from '@tamagui/core'
+
+export const customLightTheme = createTheme({
+  background: '#ffffff',
+  backgroundHover: '#f8f9fa',
+  backgroundPress: '#e9ecef',
+  backgroundFocus: '#dee2e6',
+  color: '#212529',
+  colorHover: '#495057',
+  colorPress: '#6c757d',
+  colorFocus: '#495057',
+  borderColor: '#dee2e6',
+  borderColorHover: '#adb5bd',
+  borderColorPress: '#6c757d',
+  borderColorFocus: '#86b7fe',
+  primary: '#0d6efd',
+  primaryHover: '#0b5ed7',
+  secondary: '#6c757d',
+  success: '#198754',
+  danger: '#dc3545',
+  warning: '#ffc107',
+  info: '#0dcaf0',
+})
+
+export const customDarkTheme = createTheme({
+  background: '#212529',
+  backgroundHover: '#343a40',
+  backgroundPress: '#495057',
+  backgroundFocus: '#6c757d',
+  color: '#f8f9fa',
+  colorHover: '#e9ecef',
+  colorPress: '#dee2e6',
+  colorFocus: '#e9ecef',
+  borderColor: '#495057',
+  borderColorHover: '#6c757d',
+  borderColorPress: '#adb5bd',
+  borderColorFocus: '#86b7fe',
+  primary: '#0d6efd',
+  primaryHover: '#0b5ed7',
+  secondary: '#6c757d',
+  success: '#198754',
+  danger: '#dc3545',
+  warning: '#ffc107',
+  info: '#0dcaf0',
+})

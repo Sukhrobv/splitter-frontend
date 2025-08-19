@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "Chek Bo'lish",
+    "subtitle": "Do'stlar bilan oson hisob-kitob"
+  },
+  "features": {
+    "scan": "Chek Skanerlash",
+    "scanDesc": "Cheklaringizni suratga oling",
+    "split": "Pulni Bo'lish",
+    "splitDesc": "Do'stlar bilan xarajatni taqsimlang",
+    "calculate": "Avtomatik Hisoblash",
+    "calculateDesc": "Kim qancha to'lashni bilish"
+  },
+  "welcome": {
+    "message": "Xush kelibsiz! Boshlaymiz",
+    "newUser": "Chek Bo'lishda yangimisiz?",
+    "newUserDesc": "Hisob yarating va pulni bo'lishni boshlang",
+    "existingUser": "Hisobingiz bormi?"
+  },
+  "auth": {
+    "signIn": "Kirish",
+    "createAccount": "Hisob Yaratish",
+    "email": "Email",
+    "password": "Parol",
+    "confirmPassword": "Parolni Tasdiqlash",
+    "username": "Foydalanuvchi nomi",
+    "forgotPassword": "Parolni unutdingizmi?",
+    "noAccount": "Hisobingiz yo'qmi?",
+    "haveAccount": "Hisobingiz bormi?"
+  },
+  "common": {
+    "welcome": "Xush kelibsiz",
+    "loading": "Yuklanmoqda...",
+    "error": "Xato",
+    "success": "Muvaffaqiyat",
+    "cancel": "Bekor qilish",
+    "confirm": "Tasdiqlash", 
+    "continue": "Davom etish",
+    "back": "Orqaga"
+  }
+}

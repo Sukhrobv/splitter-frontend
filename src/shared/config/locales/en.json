@@ -1,5 +1,48 @@
 {
+  "app": {
+    "name": "Receipt Splitter",
+    "subtitle": "Split bills easily with friends"
+  },
+  "features": {
+    "scan": "Scan Receipts",
+    "scanDesc": "Take photos of your receipts",
+    "split": "Split Bills", 
+    "splitDesc": "Divide costs with friends",
+    "calculate": "Auto Calculate",
+    "calculateDesc": "Know who owes what"
+  },
+  "welcome": {
+    "message": "Welcome! Let's get started",
+    "newUser": "New to Receipt Splitter?",
+    "newUserDesc": "Create an account to start splitting bills",
+    "existingUser": "Already have an account?"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signInDesc": "Welcome back! Please sign in to continue",
+    "createAccount": "Create Account",
+    "createAccountDesc": "Join us to start splitting bills with friends",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPassword": "Confirm Password",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "loginError": "An error occurred during login",
+    "registerError": "An error occurred during registration"
+  },
   "common": {
-    "welcome": "Welcome"
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "continue": "Continue",
+    "back": "Back"
   }
 }
