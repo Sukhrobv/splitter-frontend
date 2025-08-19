@@ -1,105 +1,44 @@
-# STATUS.yaml
-
-# STATUS.yaml — единственный источник правды о прогрессе проекта SPMS
-# Каждая запись имеет уникальный status_id и не редактируется после создания
+# STATUS.yaml - Receipt Splitter Frontend Progress
 
 status_entries:
-  - status_id: "spms_001"
-    timestamp: "2025-08-15T[18:49]+05:00"  # ← НУЖНО УТОЧНИТЬ ВРЕМЯ
-    roadmap_ref: "1.2"  # Этап 1.2 — Архитектурный каркас
-    
+  - status_id: "status_001"
+    roadmap_ref: "chapter_01_auth"
+    timestamp: "2025-01-20T15:30:00+05:00"
     done:
-      - "Создан проект на Expo SDK 53 с TypeScript"
-      - "Настроена навигация expo-router v5.1.4 с табовой структурой"
-      - "Установлены основные зависимости архитектуры (Zustand, React Query, Zod, etc.)"
-      - "Создана собственная система стилизации вместо NativeWind"
-      - "Решены все конфликты конфигураций Babel/Metro"
-      - "Обновлена документация ARCHITECTURE.md с реальными версиями"
-      - "Подключен проект к GitHub репозиторию"
-      
-    evidence:
-      - "GitHub репозиторий: https://github.com/Sukhrobv/splitter-frontend"
-      - "Git коммиты: d924c5c, 50c7917, e352384"
-      - "Рабочее приложение с табами Home/Explore в Expo Go"
-      - "package.json с установленными зависимостями SDK 53"
-      - "Файлы конфигурации: babel.config.js, tsconfig.json, app.json"
-      - "Структура папок src/shared/ui/ с theme.ts и styles.ts"
-      
+      - "Настроена аутентификация (login/register) с JWT токенами"
+      - "Интегрирован с бэкендом https://splitter-backend-qeig.onrender.com"
+      - "Реализовано сохранение токенов (SecureStore/AsyncStorage)"
+      - "Настроен роутинг Expo Router (welcome → auth → tabs)"
+      - "Добавлен функционал logout с подтверждением"
+      - "Переведен интерфейс на английский язык"
     next:
-      - "Завершить Этап 1.2: настроить провайдеры (QueryClient, Zustand store)"
-      - "Создать полную Feature-Sliced Design структуру папок"  
-      - "Настроить i18n для японского/английского языков"
-      - "Переход к Этапу 1.3 или 2.1 по решению пользователя"
-      
+      - "Перейти к фазе UI/UX дизайна"
+      - "Выбрать и настроить UI библиотеку"
+      - "Создать дизайн-систему и компоненты"
+    evidence:
+      - "app/_layout.tsx - главный layout с роутингом"
+      - "src/features/auth/ - модуль аутентификации"
+      - "src/shared/lib/stores/app-store.ts - Zustand store"
+      - "src/shared/lib/utils/token-storage.ts - работа с токенами"
+      - ".env - конфигурация API"
     decisions:
-      - "Отказ от NativeWind из-за конфликтов с Babel в SDK 53"
-      - "Использование собственной системы стилизации на StyleSheet"
-      - "Репозиторий: https://github.com/Sukhrobv/splitter-frontend"
-      - "Основная ветка: main"
-      
-    stack:
-      expo: "~53.0.20"
-      react: "19.0.0"
-      react_native: "0.79.5" 
-      expo_router: "~5.1.4"
-      zustand: "^5.0.7"
-      react_query: "^5.85.3"
-      react_hook_form: "^7.62.0"
-      zod: "^4.0.17"
-      typescript: "^5.8.3"
-      
+      - "Использован Axios для HTTP запросов вместо fetch"
+      - "Выбран Zustand для state management"
+      - "Интерфейс переведен на английский для международности"
     open_questions:
-      - "Выбор между продолжением Этапа 1.2 (провайдеры) или переходом к 2.1 (auth screens)"
-      - "Необходимость настройки CI/CD на данном этапе"
-      - "Детали интеграции с backend API"
-      
+      - "Какую UI библиотеку выбрать (NativeBase/Tamagui/RN Elements)?"
+      - "Нужны ли анимации переходов между экранами?"
+      - "Требуется ли dark theme поддержка?"
+    stack:
+      tech_stack: "Expo SDK 53, TypeScript, Expo Router, Zustand, Axios, React Hook Form, Zod"
+      backend: "https://splitter-backend-qeig.onrender.com"
+      auth_method: "JWT tokens"
     metrics:
-      dependencies_installed: 15
-      config_files_created: 4
-      screens_implemented: 2
-      git_commits: 3
-      documentation_files: 1
-      
-    notes:
-      - "Этап 1.2 практически завершён, осталась настройка провайдеров"
-      - "Проект стабильно работает в Expo Go без ошибок"
-      - "Готова основа для дальнейшей разработки фич"
+      features_completed: 7
+      screens_working: 4
+      api_endpoints_integrated: 3
+      auth_flow_status: "fully_working"
 
-  - status_id: "spms_002"
-    timestamp: "2025-08-18T22:18:56+05:00"
-    roadmap_ref: "1.2"
-
-    done:
-      - "Настроены провайдеры QueryClient и Zustand"
-      - "Создана полная структура папок Feature-Sliced Design"
-      - "Настроен i18n для английского и японского языков"
-
-    evidence:
-      - "src/app/providers/StoreProvider.tsx"
-      - "src/shared/config/i18n.ts"
-      - "директории src/features/* и src/entities/*"
-
-    next:
-      - "Решить, переходить ли к этапу 1.3 или 2.1"
-
-  - status_id: "spms_003"
-    timestamp: "2025-08-18T18:06:59+00:00"
-    roadmap_ref: "2.1"
-
-    done:
-      - "Добавлены экраны Welcome, Login, Register"
-      - "Реализованы функции auth login/register с сохранением токена"
-      - "Настроены guarded routes на основе токена"
-
-    evidence:
-      - "src/index.tsx"
-      - "src/login.tsx"
-      - "src/register.tsx"
-      - "src/features/auth/api/index.ts"
-      - "src/_layout.tsx"
-
-    next:
-      - "Интегрировать реальные вызовы API и обработку ошибок"
-
-schema_version: "1.0"
-project: "SPMS Receipt Splitter Frontend"
+current_chapter: "chapter_01_auth"
+current_stage: "completed"
+next_chapter: "chapter_02_design"
