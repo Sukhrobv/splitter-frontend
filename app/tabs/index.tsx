@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useAppStore } from '../../src/shared/lib/stores/app-store';
 import { useRouter } from 'expo-router';
+import CopyText from '@/shared/ui/CopyText';
 
 export default function HomeScreen() {
   const { theme, language, user, setTheme, setLanguage, logout } = useAppStore();
@@ -84,29 +85,33 @@ export default function HomeScreen() {
     marginBottom: 20,
     width: '100%' as const,
     maxWidth: 300,
+    gap: 6,
   };
 
   return (
     <View style={containerStyle}>
       <Text style={titleStyle}>Receipt Splitter</Text>
       <Text style={subtitleStyle}>Welcome!</Text>
-      
+
       {/* User info */}
       {user && (
         <View style={userInfoStyle}>
-          <Text style={{ fontSize: 14, color: '#374151', marginBottom: 4 }}>
+          <Text style={{ fontSize: 14, color: '#374151' }}>
             👤 {user.username}
           </Text>
-          <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 4 }}>
+          <Text style={{ fontSize: 14, color: '#6B7280' }}>
             📧 {user.email}
           </Text>
-          <Text style={{ fontSize: 12, color: '#9CA3AF' }}>
-            ID: {user.uniqueId}
-          </Text>
+
+          {/* ← вот здесь добавили копирование ID */}
+          <CopyText
+            label="ID"
+            value={user?.uniqueId ?? String(user?.id ?? '')}
+          />
         </View>
       )}
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={buttonStyle}
         onPress={() => setTheme(theme === 'light' ? 'dark' : 'light')}
       >
@@ -114,8 +119,8 @@ export default function HomeScreen() {
           Theme: {theme}
         </Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={buttonStyle}
         onPress={() => setLanguage(language === 'en' ? 'ja' : language === 'ja' ? 'ru' : 'en')}
       >
@@ -125,7 +130,7 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       {/* Logout button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={logoutButtonStyle}
         onPress={confirmLogout}
       >

@@ -44,5 +44,16 @@
     "confirm": "Confirm",
     "continue": "Continue",
     "back": "Back"
+  },
+  "friends": {
+    "title": "Friends",
+    "requests": "Requests",
+    "add": "Add Friend",
+    "empty": "No friends yet. Tap + to add.",
+    "searchPlaceholder": "Enter uniqueId, e.g. USER#1234",
+    "send": "Send request",
+    "remove": "Remove",
+    "loading": "Loading...",
+    "error": "Failed to load"
   }
 }
