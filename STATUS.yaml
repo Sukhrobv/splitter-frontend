@@ -1,4 +1,4 @@
-# STATUS.yaml - Receipt Splitter Frontend Progress
+# STATUS.yaml — Receipt Splitter Frontend Progress
 
 status_entries:
   - status_id: "status_001"
@@ -90,50 +90,64 @@ status_entries:
 
   - status_id: "status_003"
     roadmap_ref: "chapter_03_friends"
-    timestamp: "2025-08-27T00:00:00+05:00"
+    timestamp: "2025-08-26T12:00:00+05:00"
     done:
-      - "Подключён единый apiClient (axios) с Bearer-токеном из secure storage; исправлены 401"
-      - "Реализованы экраны: Friends (список), Requests (входящие/исходящие), Search (поиск/инвайт)"
-      - "Рабочие потоки: поиск по uniqueId, отправка инвайта, принятие/отклонение заявок"
-      - "Список друзей показывает имя/юзернейм/uniqueId (fallback вместо голого id)"
-      - "Копирование ID на Home (expo-clipboard)"
+      - "Сформулированы цели MVP модуля «Друзья» (поиск, запросы, список, удаление)"
+      - "Подготовлены скелеты экранов Friends/Requests/Search"
+      - "Черновые API-обёртки под /friends, /friends/requests, /friends/search, /friends/request, /friends/accept, /friends/reject, /friends/{userId}"
+      - "Черновой Zustand-store для друзей (fetchAll/refresh/send/accept/decline/remove)"
     next:
-      - "Рефактор и редизайн экранов (Auth/Login/Home/Friends/Requests/Search) под дизайн-систему Tamagui (#2ECC71)"
-      - "Уточнить контракт /friends (стабильные поля имя/юзернейм); убрать any и зафиксировать Zod-схемы"
-      - "Добавить Remove Friend (UI) и debounce поиска (300–500 мс), улучшить пустые/ошибочные состояния"
-      - "Вынести статусы/сообщения в i18n (en/ja/uz), лёгкие анимации"
+      - "Уточнить контракт ответов у бэкенда и скорректировать Zod-схемы"
+      - "Подключить экраны к стору, обработать ошибки/лоадинги и пустые состояния"
     evidence:
-      - "src/features/auth/api/index.ts"
       - "src/features/friends/api/friends.api.ts"
-      - "src/features/friends/model/types.ts"
       - "src/features/friends/model/friends.store.ts"
-      - "src/features/friends/ui/FriendListItem.tsx"
-      - "src/features/friends/ui/RequestList.tsx"
       - "app/tabs/friends/index.tsx"
-      - "app/tabs/friends/search.tsx"
       - "app/tabs/friends/requests.tsx"
-      - "src/shared/ui/CopyText.tsx"
-      - "src/shared/config/locales/en.json"
+      - "app/tabs/friends/search.tsx"
     decisions:
-      - "Единый axios-инстанс с интерсептором Authorization вместо локальных клиентов"
-      - "Friends/Explore используются как тестовый стенд в Expo Go"
-      - "После действий (accept/reject/send) — мгновенный refresh вместо сложных оптимистичных апдейтов"
-      - "Алиасы '@/…' для единообразных импортов"
+      - "Оптимистичные операции + последующий refresh"
+      - "Zod для валидации ответов"
+      - "i18n (en/ja/uz) по ключам"
     open_questions:
-      - "Точные поля в ответе /friends (имя/юзернейм/аватар)"
-      - "Правильная модель удаления дружбы (DELETE /friends/{userId})"
-      - "Коды ошибок для кейсов: уже друзья / заявка существует / сам себе запрос"
-      - "Рейт-лимит поиска и рекомендуемый debounce"
+      - "Точные поля ответов на /friends и /friends/requests"
+      - "Связка uniqueId vs userId/requesterId в accept/reject/remove"
     stack:
       tech_stack: "Expo SDK 53, TypeScript, Expo Router, Zustand, Axios, Zod, Tamagui"
       backend: "https://splitter-backend-qeig.onrender.com"
-      auth_method: "JWT tokens"
     metrics:
-      endpoints_integrated: 6
-      screens_updated: 5
-      locales_touched: 1
-      issues_open: 4
+      screens_sketched: 3
+      store_actions: 6
+
+  - status_id: "status_004"
+    roadmap_ref: "chapter_03_friends"
+    timestamp: "2025-08-27T12:00:00+05:00"
+    done:
+      - "Вернута структура Variant A: друзья внутри папки tabs (доступ через /tabs/friends)"
+      - "Убраны редиректы из layout’ов, чтобы исключить циклы навигации"
+      - "Сохранён текущий дизайн Home (кнопки 171×48, круг 64/26, хедер 358×46)"
+    next:
+      - "Починить переход Friends: проверить путь router.push('/tabs/friends') и названия файлов маршрутов"
+      - "Оставить 5 вкладок в нижнем таб-баре (как временная мера) и скрыть лишние заголовки/дубли"
+      - "Добавить стабильные селекторы в useFriendsStore для счётчика заявок"
+    evidence:
+      - "app/_layout.tsx — провайдеры без редиректов"
+      - "app/tabs/_layout.tsx — Tabs с 5 экранами (временная конфигурация)"
+      - "app/tabs/index.tsx — Home c рабочими кнопками и счётчиком заявок"
+    decisions:
+      - "Навигационные редиректы держим только на app/index.tsx (Welcome), чтобы исключить зацикливание"
+      - "Временная демонстрационная схема с 5 табами оставлена до стабилизации навигации"
+    open_questions:
+      - "Почему переход на /tabs/friends не срабатывает на некоторых сборках (проверить регистр имён файлов, глубину путей, типизацию Href)?"
+      - "Оставляем 5 табов временно или возвращаемся к 2 (Home/Settings) после фикса роутинга?"
+    stack:
+      tech_stack: "Expo SDK 53, Expo Router, Tamagui, Zustand, Axios"
+      notes: "Проблема воспроизводится на реальном устройстве в Expo Go"
+    metrics:
+      known_issues: 2
+      screens_touched: 3
+      regressions_blocking: 1
 
 current_chapter: "chapter_03_friends"
 current_stage: "in_progress"
-next_chapter: "chapter_03_friends_design (редизайн старых экранов и дизайн раздела друзей)"
+next_chapter: "chapter_04_groups"

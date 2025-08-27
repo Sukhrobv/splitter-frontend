@@ -4,11 +4,11 @@
     "subtitle": "Split bills easily with friends"
   },
   "features": {
-    "scan": "Scan Receipts",
+    "scan": "Scan",
     "scanDesc": "Take photos of your receipts",
     "split": "Split Bills", 
     "splitDesc": "Divide costs with friends",
-    "calculate": "Auto Calculate",
+    "calculate": "Calculate",
     "calculateDesc": "Know who owes what"
   },
   "welcome": {

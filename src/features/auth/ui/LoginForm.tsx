@@ -9,7 +9,8 @@ import { Alert } from 'react-native';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { Card } from '@/shared/ui/Card';
-import { ScreenContainer } from '@/shared/ui/ScreenContainer';
+import ScreenFormContainer from '@/shared/ui/ScreenFormContainer';
+import PasswordInput from '@/shared/ui/PasswordInput';
 import { login, LoginRequest } from '../api';
 import { saveToken } from '@/shared/lib/utils/token-storage';
 import { useAppStore } from '@/shared/lib/stores/app-store';
@@ -41,7 +42,7 @@ export default function LoginForm() {
       router.replace('/');
     } catch (error: any) {
       Alert.alert(
-        t('common.error', 'Error'), 
+        t('common.error', 'Error'),
         error.message || t('auth.loginError', 'An error occurred during login')
       );
     } finally {
@@ -50,9 +51,8 @@ export default function LoginForm() {
   };
 
   return (
-    <ScreenContainer>
-      <YStack flex={1} justifyContent="center" space="$6">
-        
+    <ScreenFormContainer>
+      <YStack space="$6">
         {/* Header */}
         <YStack alignItems="center" space="$4">
           <Text fontSize="$8" fontWeight="900" color="$gray12">
@@ -66,19 +66,18 @@ export default function LoginForm() {
         {/* Form Card */}
         <Card>
           <YStack space="$5">
-            
-            {/* Email Field */}
+            {/* Email */}
             <Controller
               control={control}
               name="email"
               render={({ field: { onChange, value } }) => (
                 <XStack space="$3" alignItems="flex-start">
-                  <YStack 
-                    width={40} 
-                    height={40} 
-                    backgroundColor="$gray3" 
+                  <YStack
+                    width={40}
+                    height={40}
+                    backgroundColor="$gray3"
                     borderRadius="$6"
-                    alignItems="center" 
+                    alignItems="center"
                     justifyContent="center"
                     marginTop="$6"
                   >
@@ -100,30 +99,29 @@ export default function LoginForm() {
               )}
             />
 
-            {/* Password Field */}
+            {/* Password */}
             <Controller
               control={control}
               name="password"
               render={({ field: { onChange, value } }) => (
                 <XStack space="$3" alignItems="flex-start">
-                  <YStack 
-                    width={40} 
-                    height={40} 
-                    backgroundColor="$gray3" 
+                  <YStack
+                    width={40}
+                    height={40}
+                    backgroundColor="$gray3"
                     borderRadius="$6"
-                    alignItems="center" 
+                    alignItems="center"
                     justifyContent="center"
                     marginTop="$6"
                   >
                     <Lock size={20} color="$gray11" />
                   </YStack>
                   <YStack flex={1}>
-                    <Input
+                    <PasswordInput
                       label={t('auth.password', 'Password')}
                       placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                       value={value}
                       onChangeText={onChange}
-                      secureTextEntry
                       error={errors.password?.message}
                       required
                     />
@@ -132,22 +130,21 @@ export default function LoginForm() {
               )}
             />
 
-            {/* Forgot Password */}
+            {/* Forgot */}
             <XStack justifyContent="flex-end">
               <Text fontSize="$3" color="#2ECC71" fontWeight="500">
                 {t('auth.forgotPassword', 'Forgot Password?')}
               </Text>
             </XStack>
 
-            {/* Submit Button */}
-            <Button 
+            {/* Submit */}
+            <Button
               title={isLoading ? t('common.loading', 'Loading...') : t('auth.signIn', 'Sign In')}
               variant="primary"
               size="large"
               onPress={handleSubmit(onSubmit)}
               disabled={isLoading}
             />
-
           </YStack>
         </Card>
 
@@ -156,21 +153,16 @@ export default function LoginForm() {
           <XStack alignItems="center" space="$1">
             <YStack width={80} height={1} backgroundColor="$gray6" />
             <Text fontSize="$3" color="$gray9" paddingHorizontal="$3">
-              {t('auth.noAccount', 'Don\'t have an account?')}
+              {t('auth.noAccount', "Don't have an account?")}
             </Text>
             <YStack width={80} height={1} backgroundColor="$gray6" />
           </XStack>
-          
+
           <Link href="/register" asChild>
-            <Button 
-              title={t('auth.createAccount', 'Create Account')} 
-              variant="outline"
-              size="medium"
-            />
+            <Button title={t('auth.createAccount', 'Create Account')} variant="outline" size="medium" />
           </Link>
         </YStack>
-
       </YStack>
-    </ScreenContainer>
+    </ScreenFormContainer>
   );
 }

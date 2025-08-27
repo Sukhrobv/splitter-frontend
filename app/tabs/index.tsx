@@ -1,143 +1,182 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { useAppStore } from '../../src/shared/lib/stores/app-store';
+import { Alert, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import CopyText from '@/shared/ui/CopyText';
+import { YStack, XStack, Text, View, Circle } from 'tamagui';
+import { ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
 
-export default function HomeScreen() {
-  const { theme, language, user, setTheme, setLanguage, logout } = useAppStore();
-  const router = useRouter();
+import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 
-  const handleLogout = async () => {
-    try {
-      console.log('🚪 Logging out...');
-      await logout();
-      console.log('✅ Logged out successfully');
-      router.replace('/');
-    } catch (error) {
-      console.error('❌ Logout error:', error);
-      Alert.alert('Error', 'Failed to logout');
-    }
-  };
-
-  const confirmLogout = () => {
-    Alert.alert(
-      'Logout?',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: handleLogout },
-      ]
-    );
-  };
-
-  const containerStyle = {
-    flex: 1,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    backgroundColor: '#ffffff',
-    padding: 20,
-  };
-
-  const titleStyle = {
-    fontSize: 28,
-    fontWeight: 'bold' as const,
-    color: '#1F2937',
-    marginBottom: 8,
-  };
-
-  const subtitleStyle = {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 30,
-  };
-
-  const buttonStyle = {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    minWidth: 160,
-    alignItems: 'center' as const,
-  };
-
-  const logoutButtonStyle = {
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 30,
-    minWidth: 160,
-    alignItems: 'center' as const,
-  };
-
-  const buttonTextStyle = {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600' as const,
-  };
-
-  const userInfoStyle = {
-    backgroundColor: '#F3F4F6',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 20,
-    width: '100%' as const,
-    maxWidth: 300,
-    gap: 6,
-  };
-
+// кнопка действия 171×48 (из фигмы)
+function ActionButton({
+  title,
+  icon,
+  onPress,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  onPress: () => void;
+}) {
   return (
-    <View style={containerStyle}>
-      <Text style={titleStyle}>Receipt Splitter</Text>
-      <Text style={subtitleStyle}>Welcome!</Text>
+    <Pressable onPress={onPress} style={{ width: 171, height: 48 }}>
+      <XStack
+        f={1}
+        h="100%"
+        br={12}
+        ai="center"
+        jc="center"
+        gap={6}
+        borderWidth={1}
+        borderColor="$gray6"
+        backgroundColor="transparent"
+        pressStyle={{ backgroundColor: '$gray2' }}
+      >
+        {icon}
+        <Text fontSize={14}>{title}</Text>
+      </XStack>
+    </Pressable>
+  );
+}
 
-      {/* User info */}
-      {user && (
-        <View style={userInfoStyle}>
-          <Text style={{ fontSize: 14, color: '#374151' }}>
-            👤 {user.username}
+// стек аватаров 92×28 (заглушки)
+function AvatarStack({ count }: { count: number }) {
+  const shown = Math.min(3, count);
+  const extra = Math.max(0, count - shown);
+  return (
+    <XStack w={92} h={28} ai="center">
+      {Array.from({ length: shown }).map((_, i) => (
+        <View
+          key={i}
+          w={28}
+          h={28}
+          br={14}
+          backgroundColor="$gray5"
+          borderWidth={2}
+          borderColor="white"
+          ml={i === 0 ? 0 : -8}
+        />
+      ))}
+      {extra > 0 && (
+        <View
+          w={28}
+          h={28}
+          br={14}
+          backgroundColor="$gray3"
+          borderWidth={2}
+          borderColor="white"
+          ml={shown === 0 ? 0 : -8}
+          ai="center"
+          jc="center"
+        >
+          <Text fontSize={10} color="$gray11">
+            +{extra}
           </Text>
-          <Text style={{ fontSize: 14, color: '#6B7280' }}>
-            📧 {user.email}
-          </Text>
-
-          {/* ← вот здесь добавили копирование ID */}
-          <CopyText
-            label="ID"
-            value={user?.uniqueId ?? String(user?.id ?? '')}
-          />
         </View>
       )}
+    </XStack>
+  );
+}
 
-      <TouchableOpacity
-        style={buttonStyle}
-        onPress={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-      >
-        <Text style={buttonTextStyle}>
-          Theme: {theme}
+// карточка 358×110
+function BillCard({
+  title,
+  sub,
+  amount,
+  participants,
+}: {
+  title: string;
+  sub: string;
+  amount: number;
+  participants: number;
+}) {
+  return (
+    <YStack
+      w={358}
+      h={110}
+      br={12}
+      borderWidth={1}
+      borderColor="$gray6"
+      p="$3"
+      backgroundColor="white"
+    >
+      <XStack jc="space-between" ai="center">
+        <YStack>
+          <Text fontSize={16} fontWeight="600" lineHeight={19}>
+            {title}
+          </Text>
+          <Text mt="$1" fontSize={12} lineHeight={12} color="$gray10">
+            {sub}
+          </Text>
+        </YStack>
+        <Text fontSize={14} lineHeight={22} fontWeight="700" color="#2ECC71">
+          UZS {amount.toLocaleString()}
         </Text>
-      </TouchableOpacity>
+      </XStack>
 
-      <TouchableOpacity
-        style={buttonStyle}
-        onPress={() => setLanguage(language === 'en' ? 'ja' : language === 'ja' ? 'ru' : 'en')}
-      >
-        <Text style={buttonTextStyle}>
-          Language: {language}
-        </Text>
-      </TouchableOpacity>
+      <XStack mt="auto" jc="space-between" ai="center">
+        <AvatarStack count={participants} />
+        <View w={36} h={36} br={18} backgroundColor="$gray5" />
+      </XStack>
+    </YStack>
+  );
+}
 
-      {/* Logout button */}
-      <TouchableOpacity
-        style={logoutButtonStyle}
-        onPress={confirmLogout}
-      >
-        <Text style={buttonTextStyle}>
-          🚪 Logout
-        </Text>
-      </TouchableOpacity>
-    </View>
+export default function HomePage() {
+  const router = useRouter();
+
+  const onScan = () => Alert.alert('Coming soon', 'Receipt scanner is not implemented yet.');
+  const openFriends = () => router.push('/friends' as any);
+  const openGroups = () => Alert.alert('Coming soon', 'Groups are not implemented yet.');
+
+  // временные карточки
+  const recent = [
+    { id: 1, title: 'Sushi kechasi', sub: '25-avgust • 5 participants', amount: 95000, participants: 5 },
+    { id: 2, title: 'Evos',          sub: '25-avgust • 3 participants', amount: 55000, participants: 3 },
+    { id: 3, title: "Tug'ilgan kun", sub: '25-avgust • 11 participants', amount: 55000, participants: 11 },
+  ];
+
+  return (
+    <ScreenContainer>
+      <YStack f={1} ai="center" bg="white">
+        {/* Scan: circle 64, icon 26 */}
+        <YStack ai="center" mt="$6" mb="$4">
+          <Pressable onPress={onScan}>
+            <Circle size={64} bg="#2ECC71" ai="center" jc="center" elevationAndroid={4}>
+              <ScanLine size={26} color="white" />
+            </Circle>
+          </Pressable>
+          <Text mt="$2" color="$gray10" fontSize={13}>
+            Scan receipt
+          </Text>
+        </YStack>
+
+        {/* Friends / Groups — 171×48 */}
+        <XStack w={358} jc="space-between" mb="$5">
+          <ActionButton title="Friends" icon={<Users size={18} />} onPress={openFriends} />
+          <ActionButton title="Groups" icon={<UserPlus size={18} />} onPress={openGroups} />
+        </XStack>
+
+        {/* Recent bills */}
+        <XStack w={358} jc="space-between" ai="center" mb="$3">
+          <Text fontSize={18} fontWeight="600">
+            Recent bills
+          </Text>
+          <Pressable onPress={() => Alert.alert('Coming soon')}>
+            <Text color="#2ECC71">Show more</Text>
+          </Pressable>
+        </XStack>
+
+        <YStack gap="$3" pb="$6">
+          {recent.map((b) => (
+            <BillCard
+              key={b.id}
+              title={b.title}
+              sub={b.sub}
+              amount={b.amount}
+              participants={b.participants}
+            />
+          ))}
+        </YStack>
+      </YStack>
+    </ScreenContainer>
   );
 }
