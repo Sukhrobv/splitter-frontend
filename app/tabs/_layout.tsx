@@ -1,25 +1,27 @@
+// app/tabs/_layout.tsx
+
 import React from 'react';
-import { Tabs, Redirect, useRouter } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, View } from 'tamagui';
-import { Bell } from '@tamagui/lucide-icons';
+import { Home, Settings, Users, Bell } from '@tamagui/lucide-icons';
+import * as Clipboard from 'expo-clipboard';
+import { useTranslation } from 'react-i18next';
 
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 
+// --- Reusable Badge Component ---
 function DotBadge({ value }: { value?: number }) {
   if (!value || value <= 0) return null;
   return (
     <View
       position="absolute"
-      top={-4}
-      right={-4}
-      w={20}
-      h={20}
+      top={-4} right={-4}
+      w={20} h={20}
       br={999}
-      ai="center"
-      jc="center"
+      ai="center" jc="center"
       backgroundColor="#2ECC71"
     >
       <Text color="white" fontSize={10} fontWeight="700">
@@ -29,106 +31,64 @@ function DotBadge({ value }: { value?: number }) {
   );
 }
 
-/**
- * Кастомный header только для Home (tabs/index).
- * ВЫСОТУ/ОТСТУП регулируй здесь:
- *   - HEADER_EXTRA_TOP — дополнительный отступ сверху (в доп. к safe area)
- *   - нижняя граница и высота строки: h={46}
- */
-function HomeHeader() {
+// --- NEW: Global Header for all Tabs ---
+function GlobalTabsHeader(props: any) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAppStore();
+  const { t } = useTranslation();
 
-  // аккуратно считаем бейдж входящих заявок при любой форме стора
-  const requestsCount = useFriendsStore((s: any) =>
-    Array.isArray(s?.incoming)
-      ? s.incoming.length
-      : Array.isArray(s?.requests?.incoming)
-      ? s.requests.incoming.length
-      : 0
-  );
+  const requestsCount = useFriendsStore(s => s.requestsRaw?.incoming?.length ?? 0);
 
-  const HEADER_EXTRA_TOP = 6; // ← подними/опусти хедер, если нужно
-
-  const onAvatarPress = async () => {
+  const onAvatarPress = () => {
     Alert.alert(
       user?.username || 'Profile',
-      `${user?.email ?? ''}\nID: ${user?.uniqueId ?? '—'}`,
+      `ID: ${user?.uniqueId ?? '—'}`,
       [
         {
           text: 'Copy ID',
           onPress: async () => {
-            try {
-              const Clipboard = await import('expo-clipboard');
-              await Clipboard.setStringAsync(user?.uniqueId ?? '');
-              Alert.alert('Copied', 'ID copied to clipboard');
-            } catch {}
+            if (user?.uniqueId) {
+              await Clipboard.setStringAsync(user.uniqueId);
+              Alert.alert('Copied', 'Your ID has been copied to the clipboard.');
+            }
           },
         },
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () =>
-            Alert.alert('Logout?', undefined, [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Logout',
-                style: 'destructive',
-                onPress: async () => {
-                  await logout();
-                  router.replace('/');
-                },
-              },
-            ]),
+          onPress: () => logout().then(() => router.replace('/')),
         },
         { text: 'Close', style: 'cancel' },
       ]
     );
   };
 
-  const openRequests = () => router.push('/tabs/friends/requests' as any);
-
   return (
-    <YStack bg="white" pt={insets.top + HEADER_EXTRA_TOP} pb="$2">
+    <YStack bg="$background" pt={insets.top}>
       <XStack
-        maxWidth={358}
-        w="100%"
-        h={46}
+        h={50}
         ai="center"
         jc="space-between"
-        alignSelf="center"
-        borderBottomWidth={1}
-        borderColor="$gray5"
-        px="$2"
+        px="$4"
       >
-        <Text fontSize={16} fontWeight="600" numberOfLines={1}>
-          Hi, {user?.username || 'friend'}!
+        {/* Dynamic Title */}
+        <Text fontSize={18} fontWeight="600" numberOfLines={1} miw={150}>
+          {props.options.title}
         </Text>
 
+        {/* Right Icons */}
         <XStack ai="center" gap="$3">
-          {/* Bell + badge */}
-          <Pressable
-            onPress={openRequests}
-            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
-            accessibilityRole="button"
-            accessibilityLabel="Friend requests"
-          >
-            <View w={17} h={18} ai="center" jc="center">
-              <Bell size={18} color="#111" />
+          <Pressable onPress={() => router.push('/tabs/friends/requests')}>
+            <View>
+              <Bell size={22} color="$gray11" />
+              <DotBadge value={requestsCount} />
             </View>
-            <DotBadge value={requestsCount} />
           </Pressable>
 
-          {/* Avatar (инициала) */}
-          <Pressable
-            onPress={onAvatarPress}
-            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
-            accessibilityRole="button"
-            accessibilityLabel="Open profile"
-          >
+          <Pressable onPress={onAvatarPress}>
             <View w={36} h={36} br={18} backgroundColor="$gray5" ai="center" jc="center">
-              <Text>{(user?.username || 'U').slice(0, 1)}</Text>
+              <Text>{(user?.username || 'U').slice(0, 1).toUpperCase()}</Text>
             </View>
           </Pressable>
         </XStack>
@@ -137,26 +97,39 @@ function HomeHeader() {
   );
 }
 
+// --- Main Tabs Layout ---
 export default function TabLayout() {
-  const token = useAppStore((s) => s.token);
-  if (!token) return <Redirect href="/" />;
+  const { user } = useAppStore();
+  const { t } = useTranslation();
 
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        header: (props) => <GlobalTabsHeader {...props} />,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          // убираем дефолтный заголовок, рендерим СВОЙ header
-          headerTitle: '',
-          header: () => <HomeHeader />,
+          title: `Hi, ${user?.username || 'friend'}!`,
           tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="friends"
+        options={{
+          title: t('friends.title', 'Friends'),
+          tabBarLabel: 'Friends',
+          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          headerTitle: 'Settings',
+          title: 'Settings',
           tabBarLabel: 'Settings',
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
     </Tabs>

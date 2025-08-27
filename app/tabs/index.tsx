@@ -7,6 +7,7 @@ import { ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 
 // кнопка действия 171×48 (из фигмы)
+// Замените старый ActionButton на этот
 function ActionButton({
   title,
   icon,
@@ -17,23 +18,26 @@ function ActionButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={{ width: 171, height: 48 }}>
-      <XStack
-        f={1}
-        h="100%"
-        br={12}
-        ai="center"
-        jc="center"
-        gap={6}
-        borderWidth={1}
-        borderColor="$gray6"
-        backgroundColor="transparent"
-        pressStyle={{ backgroundColor: '$gray2' }}
-      >
-        {icon}
-        <Text fontSize={14}>{title}</Text>
-      </XStack>
-    </Pressable>
+    // Убрали внешний Pressable и перенесли его свойства в XStack
+    <XStack
+      onPress={onPress}
+      width={171}
+      height={48}
+      borderRadius={12}
+      alignItems="center"
+      justifyContent="center"
+      gap={6}
+      borderWidth={1}
+      borderColor="$gray6"
+      backgroundColor="transparent"
+      pressStyle={{ backgroundColor: '$gray2' }}
+      // Добавим эти свойства для обратной связи при нажатии
+      hoverStyle={{ backgroundColor: '$gray2' }}
+      focusStyle={{ borderColor: '$gray7' }}
+    >
+      {icon}
+      <Text fontSize={14}>{title}</Text>
+    </XStack>
   );
 }
 
@@ -122,11 +126,20 @@ function BillCard({
 
 export default function HomePage() {
   const router = useRouter();
+const onScan = () => {
+  console.log('Scan button pressed');
+  Alert.alert('Coming soon', 'Receipt scanner is not implemented yet.');
+};
 
-  const onScan = () => Alert.alert('Coming soon', 'Receipt scanner is not implemented yet.');
-  const openFriends = () => router.push('/friends' as any);
-  const openGroups = () => Alert.alert('Coming soon', 'Groups are not implemented yet.');
+const openFriends = () => {
+  console.log("Friends button pressed, navigating to /tabs/friends");
+  router.push('/tabs/friends');
+};
 
+const openGroups = () => {
+  console.log('Groups button pressed');
+  Alert.alert('Coming soon', 'Groups are not implemented yet.');
+};
   // временные карточки
   const recent = [
     { id: 1, title: 'Sushi kechasi', sub: '25-avgust • 5 participants', amount: 95000, participants: 5 },

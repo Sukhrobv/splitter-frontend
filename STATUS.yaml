@@ -147,7 +147,42 @@ status_entries:
       known_issues: 2
       screens_touched: 3
       regressions_blocking: 1
+  
+  - status_id: "status_005"
+    roadmap_ref: "chapter_03_friends"
+    timestamp: "2025-08-27T08:26:00+05:00"
+    done:
+      - "Исправлена навигация на экран друзей с главной страницы."
+      - "Реализован новый дизайн для экрана списка друзей (`/tabs/friends`) в соответствии с макетом."
+      - "Список друзей стилизован как единый сгруппированный блок с правильными границами и скруглениями."
+      - "Обновлены стили плавающей кнопки добавления друга (FAB) согласно Figma (размер, иконка)."
+      - "Создана универсальная шапка в `app/tabs/_layout.tsx` для консистентного вида на всех вкладках."
+      - "Откатили экспериментальный компонент `Sheet` для профиля обратно к стабильному `Alert` из-за неразрешимой ошибки `PortalProvider`."
+    next:
+      - "Завершить реализацию логики на экране поиска друзей (`/tabs/friends/search`)."
+      - "Подключить и стилизовать экран заявок в друзья (`/tabs/friends/requests`)."
+      - "Протестировать полный цикл: поиск, отправка заявки, принятие, удаление друга."
+    evidence:
+      - "app/tabs/friends/index.tsx - Новый дизайн списка друзей."
+      - "src/features/friends/ui/FriendListItem.tsx - Обновленный компонент элемента списка."
+      - "src/shared/ui/Fab.tsx - Обновленная плавающая кнопка."
+      - "app/tabs/_layout.tsx - Реализована универсальная шапка и откачена логика профиля."
+      - "src/shared/lib/stores/app-store.tsx - Убрано состояние для `ProfileSheet`."
+    decisions:
+      - "Реализация кастомной шторки профиля (`Sheet`) отложена из-за блокирующей ошибки `PortalProvider`. Функционал возвращен к стандартному `Alert` для сохранения стабильности приложения."
+      - "Основная шапка приложения централизована в `app/tabs/_layout.tsx` для обеспечения единого UX на всех вкладках."
+    open_questions:
+      - "Достаточно ли `Alert` для профиля в рамках MVP, или стоит выделить отдельную задачу для исследования проблемы с `PortalProvider`?"
+    stack:
+      tech_stack: "Expo SDK 53, Expo Router, Tamagui, Zustand, Axios"
+      notes: "Проблема с PortalProvider временно заблокировала улучшение UX профиля."
+    metrics:
+      regressions_resolved: 1
+      ui_screens_updated: 1
+      known_issues: 1
 
 current_chapter: "chapter_03_friends"
 current_stage: "in_progress"
 next_chapter: "chapter_04_groups"
+
+

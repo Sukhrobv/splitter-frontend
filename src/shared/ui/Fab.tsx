@@ -1,22 +1,28 @@
+// src/shared/ui/Fab.tsx
 import { Button } from 'tamagui';
-import { StyleSheet } from 'react-native';
+import { Plus } from '@tamagui/lucide-icons';
 
-type Props = { onPress: () => void; label?: string };
-export default function Fab({ onPress, label = '+' }: Props) {
+type Props = { onPress: () => void };
+
+export default function Fab({ onPress }: Props) {
   return (
     <Button
       onPress={onPress}
-      size="$4"
-      circular
+      w={44}
+      h={44}
+      borderRadius={22}
+      backgroundColor="#2ECC71"
+      pressStyle={{ backgroundColor: '#27AE60' }}
+      icon={<Plus size={24} color="white" />}
       position="absolute"
-      style={styles.fab}
-      aria-label="Add"
-    >
-      {label}
-    </Button>
+      bottom={24}
+      right={16}
+      elevation={4}
+      shadowColor="#000"
+      shadowOpacity={0.2}
+      shadowRadius={4}
+      shadowOffset={{ width: 0, height: 2 }}
+      aria-label="Add Friend"
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  fab: { right: 16, bottom: 24, elevation: 3 }
-});
