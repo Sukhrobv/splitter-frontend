@@ -1,3 +1,4 @@
+// src/features/friends/model/friends.store.ts
 import { create } from 'zustand';
 import { FriendsApi } from '../api/friends.api';
 
@@ -12,7 +13,7 @@ type Actions = {
   fetchAll: () => Promise<void>;
   search: (q: string) => Promise<any[]>;
   send: (uniqueId: string) => Promise<void>;
-  remove: (userId: number) => Promise<void>;
+  remove: (uniqueId: string) => Promise<void>; // <-- меняем тип
 };
 
 export const useFriendsStore = create<State & Actions>((set, get) => ({
@@ -25,7 +26,7 @@ export const useFriendsStore = create<State & Actions>((set, get) => ({
     try {
       const [friends, requestsRaw] = await Promise.all([
         FriendsApi.list(),
-        FriendsApi.requests()
+        FriendsApi.requests(),
       ]);
       set({ friends, requestsRaw });
     } catch (e: any) {
@@ -44,8 +45,8 @@ export const useFriendsStore = create<State & Actions>((set, get) => ({
     await get().fetchAll();
   },
 
-  async remove(userId) {
-    await FriendsApi.remove(userId);
-    await get().fetchAll();
-  }
+  async remove(uniqueId) {
+    await FriendsApi.remove(uniqueId); // <-- передаем строку
+    await get().fetchAll(); // обновляем список после удаления
+  },
 }));

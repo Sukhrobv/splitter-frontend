@@ -181,6 +181,53 @@ status_entries:
       ui_screens_updated: 1
       known_issues: 1
 
+status_id: "2025-09-03-requests-ui-and-uniqueid-remove"
+timestamp: "2025-09-03T02:48:44+05:00"  # Asia/Tashkent
+roadmap_ref:
+  chapter: "chapter_03_friends"
+  stage: "in_progress"
+
+done:
+  - Tabs: hide Friends routes from tab bar, keep routes accessible via navigation
+  - Requests screen: full UI pass (cards, Accept/Reject, loading/empty/error, auto-dismiss notice 2.5s)
+  - Search screen: explicit Add button, statuses (You/Friend/Requested/Incoming), Enter-to-search, notices
+  - RequestList component: styled lists for incoming/outgoing with actions on incoming
+  - Friends list: Remove by uniqueId with optimistic hide and server reconciliation
+  - API: DELETE /friends/{uniqueId} (encode '#' via encodeURIComponent)
+  - Store: 'remove(uniqueId: string) signature; fetchAll after mutations'
+  - Header/Bell: preload/refresh requests on mount, focus, and app foreground
+  - Navigation: “Back to Friends” button on Requests screen
+
+next:
+  - Add optimistic updates for accept/reject in store (then reconcile via fetchAll)
+  - Optional: pull-to-refresh on Requests and Friends screens
+  - Debounce + masking for uniqueId input (USER#1234) in Search
+  - Unify friend data normalization (prefer uniqueId-only shape)
+  - Tests: store actions (accept/reject/remove), smoke tests for screens
+
+evidence:
+  - app/tabs/_layout.tsx
+  - app/tabs/friends/requests.tsx
+  - app/tabs/friends/search.tsx
+  - app/tabs/friends/index.tsx
+  - src/features/friends/ui/RequestList.tsx
+  - src/features/friends/ui/FriendListItem.tsx
+  - src/features/friends/model/friends.store.ts
+  - src/features/friends/api/friends.api.ts
+
+decisions:
+  - Use uniqueId everywhere for removal; numeric IDs only where backend requires (accept/reject requesterId)
+  - Bell badge counts only incoming requests
+  - No cancel for outgoing (not supported by backend)
+  - Notices are transient (2.5s), include target username/uniqueId
+  - Hidden tabs via options.href = null for friends/*
+
+open_questions:
+  - Should we surface outgoing count somewhere (separate badge?) or keep bell = incoming only?
+  - Any backend rate limits / throttling on /friends/request to reflect in UI?
+  - Do we want to block self-invite in store (needs meUniqueId in friends store or via selector)?
+
+
 current_chapter: "chapter_03_friends"
 current_stage: "in_progress"
 next_chapter: "chapter_04_groups"

@@ -15,34 +15,39 @@ function pickTitle(f: any) {
   );
 }
 
+function pickUniqueId(f: any): string | undefined {
+  return f?.user?.uniqueId ?? f?.uniqueId ?? undefined;
+}
+
 function pickSubtitle(f: any) {
-  const uniqueId = f?.user?.uniqueId || f?.uniqueId || '';
+  const uniqueId = pickUniqueId(f);
   return uniqueId ? `@${uniqueId.toLowerCase().replace('user#', 'user')}` : '';
 }
 
 export const FriendListItem = memo(function FriendListItem({ friend }: { friend: any }) {
-  const { remove } = useFriendsStore();
+  const { remove } = useFriendsStore(); // expect: remove(uniqueId: string)
   const { t } = useTranslation();
   const title = pickTitle(friend);
   const subtitle = pickSubtitle(friend);
+  const uniqueId = pickUniqueId(friend);
 
-  const handleRemove = () => {
-    const userId = friend.user?.id ?? friend.userId ?? friend.id;
-    if (userId) {
-      Alert.alert(
-        t('friends.remove', 'Remove friend'),
-        `Are you sure you want to remove ${title}?`,
-        [
-          { text: t('common.cancel', 'Cancel'), style: 'cancel' },
-          {
-            text: t('friends.remove', 'Remove'),
-            style: 'destructive',
-            onPress: () => remove(userId),
-          },
-        ]
-      );
-    }
-  };
+const handleRemove = () => {
+  const uniqueId = friend?.user?.uniqueId ?? friend?.uniqueId;
+  if (!uniqueId) return;
+
+  Alert.alert(
+    t('friends.remove', 'Remove friend'),
+    `Are you sure you want to remove ${title}?`,
+    [
+      { text: t('common.cancel', 'Cancel'), style: 'cancel' },
+      {
+        text: t('friends.remove', 'Remove'),
+        style: 'destructive',
+        onPress: () => remove(uniqueId), // <-- теперь строка
+      },
+    ]
+  );
+};
 
   return (
     <XStack h={60} ai="center" jc="space-between" px="$4" bg="$background">
@@ -60,6 +65,7 @@ export const FriendListItem = memo(function FriendListItem({ friend }: { friend:
         circular
         onPress={handleRemove}
         pressStyle={{ bg: '$red3' }}
+        disabled={!uniqueId} // safety: hide action if no uniqueId
       />
     </XStack>
   );

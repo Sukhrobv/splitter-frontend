@@ -14,10 +14,13 @@ const ZUserLoose = z.object({
 
 const ZFriendLoose = z.object({
   user: ZUserLoose.optional(),
-  userId: z.number().optional(),
   uniqueId: z.string().optional(),
-  status: z.string().optional(),
-}).catchall(z.unknown())
+  username: z.string().optional(),
+}).transform((f) => ({
+  uniqueId: f.uniqueId ?? f.user?.uniqueId,
+  username: f.username ?? f.user?.username,
+  raw: f,
+}));
 
 export const FriendsApi = {
   /** GET /friends — список друзей */
@@ -57,8 +60,8 @@ export const FriendsApi = {
   },
 
   /** DELETE /friends/{userId} — удалить из друзей/отменить связь */
-  async remove(userId: number) {
-    const { data } = await apiClient.delete(`/friends/${userId}`)
-    return data
+  async remove(uniqueId: string) {
+    const { data } = await apiClient.delete(`/friends/${encodeURIComponent(uniqueId)}`);
+    return data as { success?: boolean; removed?: boolean };
   },
-}
+};

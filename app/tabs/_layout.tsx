@@ -5,9 +5,12 @@ import { Tabs, useRouter } from 'expo-router';
 import { Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { YStack, XStack, Text, View } from 'tamagui';
-import { Home, Settings, Users, Bell } from '@tamagui/lucide-icons';
+import { Home, Settings, Bell } from '@tamagui/lucide-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useTranslation } from 'react-i18next';
+import { AppState } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useEffect } from 'react';
 
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
@@ -31,14 +34,35 @@ function DotBadge({ value }: { value?: number }) {
   );
 }
 
-// --- NEW: Global Header for all Tabs ---
+// --- Global Header for all Tabs ---
 function GlobalTabsHeader(props: any) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAppStore();
+  const fetchAll = useFriendsStore(s => s.fetchAll);
   const { t } = useTranslation();
 
-  const requestsCount = useFriendsStore(s => s.requestsRaw?.incoming?.length ?? 0);
+    useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  // 2) Обновлять при фокусе на табах (когда возвращаемся на Home/любой таб)
+  useFocusEffect(
+    useCallback(() => {
+      fetchAll();
+    }, [fetchAll])
+  );
+
+  // 3) Обновлять при возвращении приложения в foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') fetchAll();
+    });
+    return () => sub.remove();
+  }, [fetchAll]);
+
+  // UX: считаем только входящие как уведомления
+  const requestsCount = useFriendsStore((s) => s.requestsRaw?.incoming?.length ?? 0);
 
   const onAvatarPress = () => {
     Alert.alert(
@@ -66,18 +90,11 @@ function GlobalTabsHeader(props: any) {
 
   return (
     <YStack bg="$background" pt={insets.top}>
-      <XStack
-        h={50}
-        ai="center"
-        jc="space-between"
-        px="$4"
-      >
-        {/* Dynamic Title */}
+      <XStack h={50} ai="center" jc="space-between" px="$4">
         <Text fontSize={18} fontWeight="600" numberOfLines={1} miw={150}>
           {props.options.title}
         </Text>
 
-        {/* Right Icons */}
         <XStack ai="center" gap="$3">
           <Pressable onPress={() => router.push('/tabs/friends/requests')}>
             <View>
@@ -97,7 +114,6 @@ function GlobalTabsHeader(props: any) {
   );
 }
 
-// --- Main Tabs Layout ---
 export default function TabLayout() {
   const { user } = useAppStore();
   const { t } = useTranslation();
@@ -108,20 +124,13 @@ export default function TabLayout() {
         header: (props) => <GlobalTabsHeader {...props} />,
       }}
     >
+      {/* ВИДИМЫЕ ТАБЫ */}
       <Tabs.Screen
         name="index"
         options={{
           title: `Hi, ${user?.username || 'friend'}!`,
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="friends"
-        options={{
-          title: t('friends.title', 'Friends'),
-          tabBarLabel: 'Friends',
-          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -132,6 +141,11 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
+
+      {/* СКРЫТЫЕ ЭКРАНЫ ДРУЗЕЙ (не появляются как вкладки) */}
+      <Tabs.Screen name="friends/index" options={{ href: null, title: t('friends.title', 'Friends') }} />
+      <Tabs.Screen name="friends/search" options={{ href: null, title: t('friends.search', 'Search') }} />
+      <Tabs.Screen name="friends/requests" options={{ href: null, title: t('friends.requests', 'Requests') }} />
     </Tabs>
   );
 }
