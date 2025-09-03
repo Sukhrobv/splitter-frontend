@@ -127,18 +127,16 @@ function BillCard({
 export default function HomePage() {
   const router = useRouter();
 const onScan = () => {
-  console.log('Scan button pressed');
   Alert.alert('Coming soon', 'Receipt scanner is not implemented yet.');
 };
 
 const openFriends = () => {
-  console.log("Friends button pressed, navigating to /tabs/friends");
   router.push('/tabs/friends');
 };
 
 const openGroups = () => {
   console.log('Groups button pressed');
-  Alert.alert('Coming soon', 'Groups are not implemented yet.');
+  router.push('/tabs/groups');
 };
   // временные карточки
   const recent = [

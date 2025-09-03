@@ -146,6 +146,11 @@ export default function TabLayout() {
       <Tabs.Screen name="friends/index" options={{ href: null, title: t('friends.title', 'Friends') }} />
       <Tabs.Screen name="friends/search" options={{ href: null, title: t('friends.search', 'Search') }} />
       <Tabs.Screen name="friends/requests" options={{ href: null, title: t('friends.requests', 'Requests') }} />
+
+      {/* HIDDEN: Groups */}
+      <Tabs.Screen name="groups/index"   options={{ href: null, title: 'Groups' }} />
+      <Tabs.Screen name="groups/create"  options={{ href: null, title: 'New group' }} />
+      <Tabs.Screen name="groups/[groupId]" options={{ href: null, title: 'Group' }} />
     </Tabs>
   );
 }
