@@ -87,7 +87,7 @@ export default function FriendsScreen() {
         </ScrollView>
       </YStack>
 
-      <Fab onPress={() => router.push('/tabs/friends/search')} />
+      <Fab onPress={() => router.push('/tabs/friends/requests')} />
     </YStack>
   );
 }
