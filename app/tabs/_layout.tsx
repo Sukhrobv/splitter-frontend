@@ -122,12 +122,14 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         header: (props) => <GlobalTabsHeader {...props} />,
+        tabBarStyle: { display: 'none' },
       }}
     >
-      {/* ВИДИМЫЕ ТАБЫ */}
+      {/* СКРЫТЫЕ ТАБЫ - Home и Settings */}
       <Tabs.Screen
         name="index"
         options={{
+          href: null,
           title: `Hi, ${user?.username || 'friend'}!`,
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
@@ -136,6 +138,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
+          href: null,
           title: 'Settings',
           tabBarLabel: 'Settings',
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
@@ -155,6 +158,11 @@ export default function TabLayout() {
       <Tabs.Screen name="scan-invite" options={{ href: null, title: 'Scan Invite' }} />
       <Tabs.Screen name="friends/invite" options={{ href: null, title: 'My Friend QR' }} />
       <Tabs.Screen name="groups/invite" options={{ href: null, title: 'Group QR' }} />
+
+      <Tabs.Screen name="scan-receipt" options={{ href: null, title: 'Scan Receipt' }} />
+      <Tabs.Screen name="sessions/participants" options={{ href: null, title: 'Participants' }} />
+      <Tabs.Screen name="sessions/items-split" options={{ href: null, title: 'Items Split' }} />
+
     </Tabs>
   );
 }

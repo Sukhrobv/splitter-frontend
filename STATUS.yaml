@@ -267,8 +267,40 @@ open_questions:
     shared_components: 1
     bugs_fixed: ["camera-black-screen-on-reopen"]
 
-current_chapter: "chapter_03_friends"
+  - status_id: "2025-09-10-items-split-ui"
+    roadmap_ref: "chapter_04_sessions"
+    timestamp: "2025-09-10T23:40:00+05:00"
+    done:
+    - "Скрыли вкладки Home и Settings из нижнего таббара"
+    - "Убрали нижний таббар, оставили только кастомный заголовок"
+    - "Переработали UX выбора участников: моментальное переключение групп, дефолтный создатель"
+    - "Добавили возможность снять выбранную группу, вернуться в дефолтное состояние"
+    - "Исправили лэйаут: 3 аватара в ряд, новые отступы, убрали лишние Paragraph"
+    - "Закрепили кнопку Next над таббаром"
+    - "Переработали экран Items Split: мок-товары, фиксация нижнего Totals, 3 аватара в ряд"
+    - "Сделали Calculate интерактивным, считает на основе выбранных участников"
+    next:
+    - "Анимации выбора участников и групп"
+    - "Подключение реальных данных товаров из сканера"
+    - "Поддержка ручного редактирования цены и количества"
+    - "Рефакторинг расчёта итогов в Zustand store"
+    evidence:
+    - "app/tabs/_layout.tsx"
+    - "app/tabs/sessions/participants.tsx"
+    - "app/tabs/sessions/items-split.tsx"
+    - "src/features/sessions/model/items-split.store.ts"
+    decisions:
+    - "Каркас Items Split взят из примера пользователя, адаптирован под Tamagui"
+    - "Отдельный AssignSheet отложили для следующей итерации"
+    open_questions:
+    - "Стоит ли добавлять режим редактирования товаров прямо в экран Items Split?"
+    - "Нужен ли bottom sheet для выбора участников или оставить чипы?"
+
+current_chapter: "chapter_04_sessions"
 current_stage: "in_progress"
-next_chapter: "chapter_04_groups"
+next_chapter: "chapter_05_receipt_scanner"
+
+
+
 
 

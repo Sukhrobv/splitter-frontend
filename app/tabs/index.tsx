@@ -137,7 +137,7 @@ export default function HomePage() {
   };
 
   const onScan = () => {
-    router.push('./scan-invite');
+    router.push('/tabs/scan-receipt');
   };
 
   // временные карточки
