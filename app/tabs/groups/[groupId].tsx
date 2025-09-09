@@ -4,7 +4,7 @@ import {
   YStack, XStack, Paragraph, Separator, Button, Input, Spinner, Circle, Text
 } from 'tamagui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Crown, Pencil, Trash2, Check, X as IconX, ChevronLeft } from '@tamagui/lucide-icons';
+import { Crown, Pencil, Trash2, Check, X as IconX, ChevronLeft, QrCode } from '@tamagui/lucide-icons';
 
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
@@ -26,8 +26,6 @@ function computeIsOwner(
 
 export default function GroupDetailsScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
-  theGid: {
-  }
   const gid = Number(groupId);
   const router = useRouter();
 
@@ -118,14 +116,18 @@ export default function GroupDetailsScreen() {
     finally { setOpUid(null); }
   }
 
+  const openGroupQR = () => {
+    if (!groupId) return;
+    router.push({ pathname: '/tabs/groups/invite', params: { groupId } });
+  };
+
   if (loading && !current) return <YStack f={1} ai="center" jc="center"><Spinner /></YStack>;
   if (error) return <YStack f={1} p="$4"><Paragraph col="$red10">{error}</Paragraph></YStack>;
   if (!current) return <YStack f={1} p="$4"><Paragraph>No group</Paragraph></YStack>;
 
   return (
     <YStack f={1} p="$4" gap="$3" bg="$background">
-
-      {/* Back (text-only) with chevron */}
+      {/* Back (text-only) with chevron) */}
       <XStack>
         <Button
           onPress={() => router.replace('/tabs/groups' as never)}
@@ -161,7 +163,6 @@ export default function GroupDetailsScreen() {
               px={10}
               borderRadius={8}
               fontSize={14}
-              // видимость текста во время ввода
               bg="$backgroundPress"
               color="$gray12"
               placeholderTextColor="$gray10"
@@ -217,7 +218,23 @@ export default function GroupDetailsScreen() {
         )}
       </XStack>
 
-      <Separator />
+      {/* INVITE ACTIONS — только QR (сканер перенесён на список групп) */}
+      {canManage && (
+        <>
+          <XStack jc="flex-end" ai="center" py="$2">
+            <Button
+              onPress={openGroupQR}
+              theme="gray"
+              size="$3"
+              borderRadius="$3"
+              icon={<QrCode size={18} />}
+            >
+              Show group QR
+            </Button>
+          </XStack>
+          <Separator />
+        </>
+      )}
 
       {/* MEMBERS */}
       <Paragraph fow="700" fos="$6">Members</Paragraph>
@@ -234,8 +251,8 @@ export default function GroupDetailsScreen() {
             const busy = opUid === uid;
 
             return (
-              <>
-                <XStack key={uid ?? `${label}-${idx}`} h={60} ai="center" jc="space-between" px="$4" bg="$green3">
+              <React.Fragment key={uid ?? `${label}-${idx}`}>
+                <XStack h={60} ai="center" jc="space-between" px="$4" bg="$green3">
                   <XStack ai="center" gap="$3">
                     <Circle size={36} backgroundColor="$gray5" />
                     <YStack>
@@ -254,7 +271,7 @@ export default function GroupDetailsScreen() {
                   </XStack>
                 </XStack>
                 {idx < (members.length - 1) && <Separator />}
-              </>
+              </React.Fragment>
             );
           })}
         </YStack>
@@ -290,8 +307,8 @@ export default function GroupDetailsScreen() {
             const busy = opUid === uid;
 
             return (
-              <>
-                <XStack key={uid ?? `${label}-${idx}`} h={60} ai="center" jc="space-between" px="$4">
+              <React.Fragment key={uid ?? `${label}-${idx}`}>
+                <XStack h={60} ai="center" jc="space-between" px="$4">
                   <XStack ai="center" gap="$3">
                     <Circle size={36} backgroundColor="$gray5" />
                     <YStack>
@@ -307,7 +324,7 @@ export default function GroupDetailsScreen() {
                   )}
                 </XStack>
                 {idx < (candidates.length - 1) && <Separator />}
-              </>
+              </React.Fragment>
             );
           })}
         </YStack>

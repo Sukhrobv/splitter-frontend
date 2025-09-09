@@ -227,6 +227,45 @@ open_questions:
   - Any backend rate limits / throttling on /friends/request to reflect in UI?
   - Do we want to block self-invite in store (needs meUniqueId in friends store or via selector)?
 
+  - status_id: "status_006_qr_invites_unified"
+    roadmap_ref: "chapter_04_groups"
+    timestamp: "2025-09-09T22:01:22+05:00"   # Asia/Tashkent
+    done:
+    - "Унитарный стиль QR-экранов: общий компонент InviteQR (Card + подписи + expiry)."
+    - "Экран 'My Friend QR' (/tabs/friends/invite) со стилем, Back в Requests, кнопка 'New QR'."
+    - "Экран 'Group QR' (/tabs/groups/invite?groupId=ID), доступ из экрана группы, только для владельца."
+    - "Сканер инвайтов (/tabs/scan-invite) с фиксом чёрного экрана (useIsFocused), статус-плашками и Back в исходный экран (from)."
+    - "Кнопка 'Scan invite' перенесена на список групп (/tabs/groups), удалена из экрана конкретной группы."
+    - "Парсер ссылок из QR: shared util parseInviteFromScan (поддержка /friends/join и /groups/join)."
+    - "API групп: GroupsApi.createInvite(groupId, ttl) и GroupsApi.joinByToken(token)."
+    - "Маршруты зарегистрированы как скрытые в Tabs: scan-invite, friends/invite, groups/invite."
+    next:
+    - "Макетные экраны чека: сканер чека → выбор участников → распределение товаров."
+    - "Кнопка на Home 'Scan receipt' ведёт на /tabs/scan-receipt (скрытый маршрут)."
+    - "Определить контракт данных между сканером и сплиттером (передача items JSON через params или стор)."
+    evidence:
+    - "src/shared/ui/InviteQR.tsx"
+    - "app/tabs/friends/invite.tsx"
+    - "app/tabs/groups/invite.tsx"
+    - "app/tabs/scan-invite.tsx"
+    - "src/shared/lib/utils/invite.ts"
+    - "src/features/groups/api/groups.api.ts"
+    - "app/tabs/_layout.tsx (скрытые экраны)"
+    decisions:
+    - "Действия по дружбе (Scan/My QR) размещены на Requests; скан в группах — на списке групп."
+    - "QR как картинка генерируется на фронте из выданного URL; токен/TTL — на бэкенде."
+    - "Единый стиль для всех вспомогательных экранов (Card/бордеры/отступы)."
+    open_questions:
+    - "Делаем ли deep link для внешней камеры в MVP (сейчас — только внутр. сканер)?"
+    - "TTL инвайта по умолчанию (сейчас 5 минут) — зафиксировать?"
+    - "Кто может показывать QR группы — владелец или любой участник?"
+    stack:
+    tech_stack: "Expo SDK 53, TypeScript, Expo Router, Tamagui, Zustand, Axios, Expo Camera"
+    backend: "https://splitter-backend-qeig.onrender.com"
+    metrics:
+    screens_updated: 3
+    shared_components: 1
+    bugs_fixed: ["camera-black-screen-on-reopen"]
 
 current_chapter: "chapter_03_friends"
 current_stage: "in_progress"

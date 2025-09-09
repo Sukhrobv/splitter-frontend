@@ -1,3 +1,4 @@
+// app/tabs/index.tsx
 import React from 'react';
 import { Alert, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -7,7 +8,6 @@ import { ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 
 // кнопка действия 171×48 (из фигмы)
-// Замените старый ActionButton на этот
 function ActionButton({
   title,
   icon,
@@ -18,7 +18,6 @@ function ActionButton({
   onPress: () => void;
 }) {
   return (
-    // Убрали внешний Pressable и перенесли его свойства в XStack
     <XStack
       onPress={onPress}
       width={171}
@@ -31,7 +30,6 @@ function ActionButton({
       borderColor="$gray6"
       backgroundColor="transparent"
       pressStyle={{ backgroundColor: '$gray2' }}
-      // Добавим эти свойства для обратной связи при нажатии
       hoverStyle={{ backgroundColor: '$gray2' }}
       focusStyle={{ borderColor: '$gray7' }}
     >
@@ -126,18 +124,22 @@ function BillCard({
 
 export default function HomePage() {
   const router = useRouter();
-const onScan = () => {
-  Alert.alert('Coming soon', 'Receipt scanner is not implemented yet.');
-};
 
-const openFriends = () => {
-  router.push('/tabs/friends');
-};
+  // Можешь вернуть Alert, если это отдельно "скан чека".
+  // Для MVP инвайтов удобнее сразу открыть наш экран сканера:
 
-const openGroups = () => {
-  console.log('Groups button pressed');
-  router.push('/tabs/groups');
-};
+  const openFriends = () => {
+    router.push('/tabs/friends');
+  };
+
+  const openGroups = () => {
+    router.push('/tabs/groups');
+  };
+
+  const onScan = () => {
+    router.push('./scan-invite');
+  };
+
   // временные карточки
   const recent = [
     { id: 1, title: 'Sushi kechasi', sub: '25-avgust • 5 participants', amount: 95000, participants: 5 },
@@ -156,7 +158,7 @@ const openGroups = () => {
             </Circle>
           </Pressable>
           <Text mt="$2" color="$gray10" fontSize={13}>
-            Scan receipt
+            Scan invite
           </Text>
         </YStack>
 

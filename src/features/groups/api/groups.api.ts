@@ -62,4 +62,16 @@ export const GroupsApi = {
     const { data } = await apiClient.patch(`/groups/${groupId}/members/${enc(uniqueId)}/promote`);
     return data;
   },
+
+  async createInvite(groupId: string | number, expiresInSeconds: number) {
+    const gid = String(groupId);
+    const { data } = await apiClient.post(`/groups/${gid}/invite`, { expiresInSeconds });
+    return data as { token: string; url: string; expiresAt: string };
+  },
+
+  /** POST /groups/join { token } -> 200 */
+  async joinByToken(token: string) {
+    const { data } = await apiClient.post('/groups/join', { token });
+    return data;
+  },
 };

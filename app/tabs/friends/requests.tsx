@@ -1,10 +1,9 @@
-// app/tabs/friends/requests.tsx
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   YStack, XStack, Paragraph, Separator, Button, Spinner, Input, Circle, Text
 } from 'tamagui';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, CircleCheck, CircleX } from '@tamagui/lucide-icons';
+import { ChevronLeft, CircleCheck, CircleX, QrCode, Scan } from '@tamagui/lucide-icons';
 
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import { FriendsApi } from '@/features/friends/api/friends.api';
@@ -151,7 +150,7 @@ export default function FriendsRequestsUnified() {
 
   const fmtUid = (uid?: string) => (uid ? `@${uid.toLowerCase().replace('user#', 'user')}` : '');
 
-  // слитная строка списка: боковые бордеры всегда, верхний как разделитель, нижний только у последнего
+  // слитная строка списка
   function UserRow({
     title, uid, right, index, total,
   }: { title: string; uid?: string; right?: React.ReactNode; index: number; total: number }) {
@@ -169,7 +168,7 @@ export default function FriendsRequestsUnified() {
         borderColor="$gray5"
         borderLeftWidth={1}
         borderRightWidth={1}
-        borderTopWidth={1}               // разделитель сверху
+        borderTopWidth={1}
         borderBottomWidth={isLast ? 1 : 0}
         borderTopLeftRadius={isFirst ? 8 : 0}
         borderTopRightRadius={isFirst ? 8 : 0}
@@ -209,6 +208,30 @@ export default function FriendsRequestsUnified() {
         {notice.node}
         {error && <Paragraph col="$red10">{error}</Paragraph>}
 
+        {/* Invite actions (UX): Scan + My QR */}
+        <XStack jc="space-between" ai="center" alignSelf="center" w={LIST_W}>
+          <Button
+            onPress={() =>
+              router.push({ pathname: '/tabs/scan-invite', params: { from: 'friends-requests' } } as never)
+            }
+            size="$3"
+            borderRadius="$3"
+            theme="active"
+            icon={<Scan size={18} />}
+          >
+            Scan invite
+          </Button>
+          <Button
+            onPress={() => router.push('/tabs/friends/invite' as never)}
+            size="$3"
+            borderRadius="$3"
+            theme="gray"
+            icon={<QrCode size={18} />}
+          >
+            Show my QR
+          </Button>
+        </XStack>
+
         {/* SEARCH */}
         <XStack ai="center" alignSelf="center">
           <Input
@@ -227,7 +250,7 @@ export default function FriendsRequestsUnified() {
           />
         </XStack>
 
-        {/* SEARCH RESULTS (слитный список) */}
+        {/* SEARCH RESULTS */}
         {res.length > 0 && (
           <>
             <Separator />
@@ -298,7 +321,7 @@ export default function FriendsRequestsUnified() {
           </Button>
         </XStack>
 
-        {/* LISTS — слитные */}
+        {/* LISTS */}
         {tab === 'incoming' ? (
           <>
             <Separator />

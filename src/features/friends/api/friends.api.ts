@@ -64,4 +64,18 @@ export const FriendsApi = {
     const { data } = await apiClient.delete(`/friends/${encodeURIComponent(uniqueId)}`);
     return data as { success?: boolean; removed?: boolean };
   },
+
+  /** POST /friends/invite { expiresInSeconds } -> { token, url, expiresAt } */
+  async createInvite(expiresInSeconds: number) {
+    const { data } = await apiClient.post('/friends/invite', { expiresInSeconds });
+    return data as { token: string; url: string; expiresAt: string };
+  },
+
+  /** POST /friends/join { token } -> 200 OK (created/accepted/already exists) */
+  async joinByToken(token: string) {
+    const { data } = await apiClient.post('/friends/join', { token });
+    return data;
+  },
 };
+
+

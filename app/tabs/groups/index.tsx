@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { YStack, Paragraph, Card, XStack, Spinner, Separator, View } from 'tamagui';
+import { YStack, Paragraph, Card, XStack, Spinner, Separator, View, Button } from 'tamagui';
 import { useRouter } from 'expo-router';
+import { Scan } from '@tamagui/lucide-icons';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import Fab from '@/shared/ui/Fab';
 
@@ -45,6 +46,21 @@ export default function GroupsListScreen() {
     <YStack f={1} p="$4" gap="$3" bg="$background">
       <Paragraph fow="700" fos="$7">Groups</Paragraph>
       <Separator />
+
+      {/* Invite actions for groups: только сканирование на списке */}
+      <XStack jc="flex-end" ai="center">
+        <Button
+          onPress={() =>
+            router.push({ pathname: '/tabs/scan-invite', params: { from: 'groups-index' } } as never)
+          }
+          size="$3"
+          borderRadius="$3"
+          theme="active"
+          icon={<Scan size={18} />}
+        >
+          Scan invite
+        </Button>
+      </XStack>
 
       {error && <Paragraph col="$red10">{error}</Paragraph>}
 
