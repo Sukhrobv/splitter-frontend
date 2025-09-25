@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { GroupsApi, Group, GroupDetails } from '../api/groups.api';
 
 type State = {
@@ -18,6 +18,7 @@ type Actions = {
   deleteGroup: (groupId: number) => Promise<void>;
   addMember: (groupId: number, uniqueId: string) => Promise<void>;
   removeMember: (groupId: number, uniqueId: string) => Promise<void>;
+  clearCurrent: () => void;
 };
 
 export const useGroupsStore = create<State & Actions>((set, get) => ({
@@ -31,7 +32,7 @@ export const useGroupsStore = create<State & Actions>((set, get) => ({
     try {
       const groups = await GroupsApi.list();
       set({ groups });
-      // не блокируем UI: подтянем counts отдельно
+      // РЅРµ Р±Р»РѕРєРёСЂСѓРµРј UI: РїРѕРґС‚СЏРЅРµРј counts РѕС‚РґРµР»СЊРЅРѕ
       get().hydrateCounts().catch(() => {});
     } catch (e: any) {
       set({ error: e?.message ?? 'Failed to load groups' });
@@ -59,7 +60,7 @@ export const useGroupsStore = create<State & Actions>((set, get) => ({
     try {
       const current = await GroupsApi.details(groupId);
       set({ current });
-      // обновим счётчик
+      // РѕР±РЅРѕРІРёРј СЃС‡С‘С‚С‡РёРє
       set(s => ({ counts: { ...s.counts, [groupId]: current.members?.length ?? 0 } }));
     } catch (e: any) {
       set({ error: e?.message ?? 'Failed to load group' });
@@ -95,4 +96,9 @@ export const useGroupsStore = create<State & Actions>((set, get) => ({
     await GroupsApi.removeMember(groupId, uniqueId);
     await get().openGroup(groupId);
   },
+
+  clearCurrent() {
+    set({ current: undefined });
+  },
 }));
+

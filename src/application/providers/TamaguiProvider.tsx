@@ -1,6 +1,7 @@
 // src/application/providers/TamaguiProvider.tsx
 import React from 'react'
 import { TamaguiProvider as Provider } from '@tamagui/core'
+import { PortalProvider } from '@tamagui/portal'
 import { useFonts } from 'expo-font'
 import config from '../../../tamagui.config'
 
@@ -20,7 +21,9 @@ export const TamaguiProvider: React.FC<TamaguiProviderProps> = ({ children }) =>
 
   return (
     <Provider config={config} defaultTheme="light">
-      {children}
+      <PortalProvider>
+        {children}
+      </PortalProvider>
     </Provider>
   )
 }

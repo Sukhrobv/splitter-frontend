@@ -1,13 +1,15 @@
 // app/tabs/index.tsx
 import React from 'react';
-import { Alert, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { YStack, XStack, Text, View, Circle } from 'tamagui';
 import { ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
 
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
+import { BILL_HISTORY } from '@/features/sessions/mock/history';
 
-// кнопка действия 171×48 (из фигмы)
+const BULLET = '\u2022';
+
 function ActionButton({
   title,
   icon,
@@ -39,7 +41,6 @@ function ActionButton({
   );
 }
 
-// стек аватаров 92×28 (заглушки)
 function AvatarStack({ count }: { count: number }) {
   const shown = Math.min(3, count);
   const extra = Math.max(0, count - shown);
@@ -78,55 +79,60 @@ function AvatarStack({ count }: { count: number }) {
   );
 }
 
-// карточка 358×110
 function BillCard({
   title,
   sub,
   amount,
   participants,
+  onPress,
 }: {
   title: string;
   sub: string;
   amount: number;
   participants: number;
+  onPress?: () => void;
 }) {
   return (
-    <YStack
-      w={358}
-      h={110}
-      br={12}
-      borderWidth={1}
-      borderColor="$gray6"
-      p="$3"
-      backgroundColor="white"
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => ({
+        width: 358,
+        opacity: onPress && pressed ? 0.9 : 1,
+      })}
     >
-      <XStack jc="space-between" ai="center">
-        <YStack>
-          <Text fontSize={16} fontWeight="600" lineHeight={19}>
-            {title}
+      <YStack
+        h={110}
+        br={12}
+        borderWidth={1}
+        borderColor="$gray6"
+        p="$3"
+        backgroundColor="white"
+      >
+        <XStack jc="space-between" ai="center">
+          <YStack>
+            <Text fontSize={16} fontWeight="600" lineHeight={19}>
+              {title}
+            </Text>
+            <Text mt="$1" fontSize={12} lineHeight={12} color="$gray10">
+              {sub}
+            </Text>
+          </YStack>
+          <Text fontSize={14} lineHeight={22} fontWeight="700" color="#2ECC71">
+            UZS {amount.toLocaleString()}
           </Text>
-          <Text mt="$1" fontSize={12} lineHeight={12} color="$gray10">
-            {sub}
-          </Text>
-        </YStack>
-        <Text fontSize={14} lineHeight={22} fontWeight="700" color="#2ECC71">
-          UZS {amount.toLocaleString()}
-        </Text>
-      </XStack>
+        </XStack>
 
-      <XStack mt="auto" jc="space-between" ai="center">
-        <AvatarStack count={participants} />
-        <View w={36} h={36} br={18} backgroundColor="$gray5" />
-      </XStack>
-    </YStack>
+        <XStack mt="auto" ai="center">
+          <AvatarStack count={participants} />
+        </XStack>
+      </YStack>
+    </Pressable>
   );
 }
 
 export default function HomePage() {
   const router = useRouter();
-
-  // Можешь вернуть Alert, если это отдельно "скан чека".
-  // Для MVP инвайтов удобнее сразу открыть наш экран сканера:
 
   const openFriends = () => {
     router.push('/tabs/friends');
@@ -140,17 +146,11 @@ export default function HomePage() {
     router.push('/tabs/scan-receipt');
   };
 
-  // временные карточки
-  const recent = [
-    { id: 1, title: 'Sushi kechasi', sub: '25-avgust • 5 participants', amount: 95000, participants: 5 },
-    { id: 2, title: 'Evos',          sub: '25-avgust • 3 participants', amount: 55000, participants: 3 },
-    { id: 3, title: "Tug'ilgan kun", sub: '25-avgust • 11 participants', amount: 55000, participants: 11 },
-  ];
+  const recent = BILL_HISTORY.slice(0, 3);
 
   return (
     <ScreenContainer>
       <YStack f={1} ai="center" bg="white">
-        {/* Scan: circle 64, icon 26 */}
         <YStack ai="center" mt="$6" mb="$4">
           <Pressable onPress={onScan}>
             <Circle size={64} bg="#2ECC71" ai="center" jc="center" elevationAndroid={4}>
@@ -162,32 +162,36 @@ export default function HomePage() {
           </Text>
         </YStack>
 
-        {/* Friends / Groups — 171×48 */}
         <XStack w={358} jc="space-between" mb="$5">
           <ActionButton title="Friends" icon={<Users size={18} />} onPress={openFriends} />
           <ActionButton title="Groups" icon={<UserPlus size={18} />} onPress={openGroups} />
         </XStack>
 
-        {/* Recent bills */}
         <XStack w={358} jc="space-between" ai="center" mb="$3">
           <Text fontSize={18} fontWeight="600">
             Recent bills
           </Text>
-          <Pressable onPress={() => Alert.alert('Coming soon')}>
+          <Pressable onPress={() => router.push('/tabs/sessions/history')}>
             <Text color="#2ECC71">Show more</Text>
           </Pressable>
         </XStack>
 
         <YStack gap="$3" pb="$6">
-          {recent.map((b) => (
-            <BillCard
-              key={b.id}
-              title={b.title}
-              sub={b.sub}
-              amount={b.amount}
-              participants={b.participants}
-            />
-          ))}
+          {recent.map((bill) => {
+            const summary = `${bill.date} ${BULLET} ${bill.participantsCount} ishtirokchi`;
+            return (
+              <BillCard
+                key={bill.id}
+                title={bill.title}
+                sub={summary}
+                amount={bill.totalAmount}
+                participants={bill.participantsCount}
+                onPress={() =>
+                  router.push({ pathname: '/tabs/sessions/history/[historyId]', params: { historyId: bill.id } })
+                }
+              />
+            );
+          })}
         </YStack>
       </YStack>
     </ScreenContainer>

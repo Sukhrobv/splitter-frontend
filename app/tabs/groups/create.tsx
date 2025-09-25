@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   YStack, XStack, Input, Button, Paragraph, Separator, Spinner, Circle, Text
 } from 'tamagui';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Plus, Check, X as IconX, Crown } from '@tamagui/lucide-icons';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
@@ -43,19 +44,30 @@ export default function GroupCreateScreen() {
   const router = useRouter();
   const notice = useAutoNotice();
 
-  const { createGroup, openGroup, addMember, removeMember, current, loading } = useGroupsStore();
+  const { createGroup, openGroup, addMember, removeMember, current, loading, clearCurrent } = useGroupsStore();
   const { friends, fetchAll: fetchFriends } = useFriendsStore();
 
   const [name, setName] = useState('');
   const [creating, setCreating] = useState(false);
   const [groupId, setGroupId] = useState<number | undefined>(undefined);
   const [filter, setFilter] = useState('');
-  const [opUid, setOpUid] = useState<string | null>(null); // текущий uid в операции add/remove
+  const [opUid, setOpUid] = useState<string | null>(null); // С‚РµРєСѓС‰РёР№ uid РІ РѕРїРµСЂР°С†РёРё add/remove
+
+  useFocusEffect(
+    useCallback(() => {
+      clearCurrent();
+      setGroupId(undefined);
+      setName('');
+      setFilter('');
+      setOpUid(null);
+      setCreating(false);
+    }, [clearCurrent])
+  );
 
   useEffect(() => { if (!friends?.length) fetchFriends(); }, [friends?.length, fetchFriends]);
   useEffect(() => { if (groupId) openGroup(groupId); }, [groupId, openGroup]);
 
-  // карта участников { UID_UPPER -> role }
+  // РєР°СЂС‚Р° СѓС‡Р°СЃС‚РЅРёРєРѕРІ { UID_UPPER -> role }
   const memberRole = useMemo(() => {
     const map = new Map<string, string>();
     (current?.members ?? []).forEach(m => {
@@ -65,7 +77,7 @@ export default function GroupCreateScreen() {
     return map;
   }, [current?.members]);
 
-  // весь список друзей, отфильтрованный поиском
+  // РІРµСЃСЊ СЃРїРёСЃРѕРє РґСЂСѓР·РµР№, РѕС‚С„РёР»СЊС‚СЂРѕРІР°РЅРЅС‹Р№ РїРѕРёСЃРєРѕРј
   const rows = useMemo(() => {
     const base = (friends ?? []).map((f: any) => {
       const uid = pickUniqueId(f);
@@ -149,7 +161,7 @@ export default function GroupCreateScreen() {
           <Input
             value={filter}
             onChangeText={setFilter}
-            placeholder="Search friends…"
+            placeholder="Search friendsвЂ¦"
             returnKeyType="search"
           />
 
@@ -221,3 +233,4 @@ export default function GroupCreateScreen() {
     </YStack>
   );
 }
+

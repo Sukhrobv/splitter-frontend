@@ -7,12 +7,12 @@ import { AppStoreProvider } from '@/shared/lib/stores/app-store';
 
 export default function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <AppStoreProvider>
-      <TamaguiProvider>
+    <TamaguiProvider>
+      <AppStoreProvider>
         <QueryProvider>
           <I18nProvider>{children}</I18nProvider>
         </QueryProvider>
-      </TamaguiProvider>
-    </AppStoreProvider>
+      </AppStoreProvider>
+    </TamaguiProvider>
   );
 }
