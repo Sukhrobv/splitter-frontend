@@ -1,12 +1,11 @@
 ﻿// app/tabs/_layout.tsx
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { Pressable, Alert } from 'react-native';
+import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { YStack, XStack, Text, View, Popover, Separator } from 'tamagui';
-import { Home, Settings, Bell, ChevronLeft, Copy, LogOut } from '@tamagui/lucide-icons';
-import * as Clipboard from 'expo-clipboard';
+import { YStack, XStack, Text, View } from 'tamagui';
+import { Home, Settings, Bell, ChevronLeft } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -37,15 +36,16 @@ function DotBadge({ value }: { value?: number }) {
 function GlobalTabsHeader(props: any) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user, logout } = useAppStore();
-  const fetchAll = useFriendsStore(s => s.fetchAll);
+  const { user } = useAppStore();
+  const fetchAll = useFriendsStore((s) => s.fetchAll);
   const { t } = useTranslation();
   const routeName = props?.route?.name ?? '';
   const showHomeShortcut =
+    routeName === 'profile' ||
     routeName.startsWith('friends') ||
     routeName.startsWith('groups') ||
     routeName.startsWith('sessions');
-  const onBackToHome = () => router.replace('/tabs');
+  const onBackToHome = () => router.replace({ pathname: '/tabs' });
 
   useEffect(() => {
     fetchAll();
@@ -65,34 +65,12 @@ function GlobalTabsHeader(props: any) {
   }, [fetchAll]);
 
   const requestsCount = useFriendsStore((s) => s.requestsRaw?.incoming?.length ?? 0);
-  const [profileOpen, setProfileOpen] = useState(false);
   const displayName = user?.username || 'Guest';
   const userInitial = displayName.slice(0, 1).toUpperCase();
-  const userId = user?.uniqueId ?? '';
-  const visibleUserId = userId || 'N/A';
 
-  const handleCopyId = useCallback(async () => {
-    if (!userId) {
-      Alert.alert('Unavailable', 'User ID is not available yet.');
-      return;
-    }
-    await Clipboard.setStringAsync(userId);
-    Alert.alert('Copied', 'Your ID has been copied to the clipboard.');
-  }, [userId]);
-
-  const closeMenu = useCallback(() => setProfileOpen(false), []);
-
-  const handleSettings = useCallback(() => {
-    closeMenu();
-    router.push('/tabs/settings');
-  }, [closeMenu, router]);
-
-  const handleLogout = useCallback(() => {
-    closeMenu();
-    logout()
-      .then(() => router.replace('/'))
-      .catch(() => Alert.alert('Error', 'Could not log out. Please try again.'));
-  }, [closeMenu, logout, router]);
+  const handleOpenProfile = useCallback(() => {
+    router.push({ pathname: '/tabs/profile' });
+  }, [router]);
 
   return (
     <YStack bg="$background" pt={insets.top}>
@@ -121,71 +99,11 @@ function GlobalTabsHeader(props: any) {
             </View>
           </Pressable>
 
-         <Popover open={profileOpen} onOpenChange={setProfileOpen}>
-  <Popover.Trigger asChild>
-    <Pressable hitSlop={10}>
-      <View w={36} h={36} br={18} backgroundColor="$gray5" ai="center" jc="center">
-        <Text>{userInitial}</Text>
-      </View>
-    </Pressable>
-  </Popover.Trigger>
-
-  {/* Применяем стили напрямую к Popover.Content */}
-  <Popover.Content
-    w={220}
-    gap="$3"
-    borderRadius={12}
-    borderWidth={1}
-    borderColor="$gray5"
-    padding={12}
-    backgroundColor="$color1"
-    elevation="$4"
-  >
-    {/* Popover.Arrow теперь прямой дочерний элемент */}
-    <Popover.Arrow size={14} borderWidth={1} borderColor="$gray5" backgroundColor="$color1" />
-
-    {/* Остальной контент находится внутри отдельного YStack */}
-    <YStack gap="$3">
-      <XStack ai="center" gap="$2">
-        <View w={42} h={42} br={21} backgroundColor="$gray5" ai="center" jc="center">
-          <Text fontSize={18} fontWeight="600">{userInitial}</Text>
-        </View>
-        <YStack>
-          <Text fontSize={16} fontWeight="600">{displayName}</Text>
-          {user?.email && <Text fontSize={12} color="$gray9">{user.email}</Text>}
-        </YStack>
-      </XStack>
-
-      <XStack ai="center" jc="space-between">
-        <Text fontSize={12} color="$gray9">ID: {visibleUserId}</Text>
-        <Pressable onPress={handleCopyId} hitSlop={8}>
-          <XStack ai="center" gap={6}>
-            <Copy size={16} color="#2ECC71" />
-            <Text fontSize={12} color="#2ECC71">Copy</Text>
-          </XStack>
-        </Pressable>
-      </XStack>
-
-      <Separator />
-
-      <YStack gap="$2">
-        <Pressable onPress={handleSettings} hitSlop={8}>
-          <XStack ai="center" gap="$2" py={6}>
-            <Settings size={18} color="$gray11" />
-            <Text fontSize={14} color="$gray12">Settings</Text>
-          </XStack>
-        </Pressable>
-        <Separator />
-        <Pressable onPress={handleLogout} hitSlop={8}>
-          <XStack ai="center" gap="$2" py={6}>
-            <LogOut size={18} color="#E74C3C" />
-            <Text fontSize={14} color="#E74C3C">Log out</Text>
-          </XStack>
-        </Pressable>
-      </YStack>
-    </YStack>
-  </Popover.Content>
-</Popover>
+          <Pressable onPress={handleOpenProfile} hitSlop={10}>
+            <View w={36} h={36} br={18} backgroundColor="$gray5" ai="center" jc="center">
+              <Text>{userInitial}</Text>
+            </View>
+          </Pressable>
         </XStack>
       </XStack>
     </YStack>
@@ -220,6 +138,14 @@ export default function TabLayout() {
           title: 'Settings',
           tabBarLabel: 'Settings',
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          href: null,
+          title: t('profile.title', 'Profile'),
         }}
       />
 
