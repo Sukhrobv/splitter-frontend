@@ -1,4 +1,4 @@
-﻿// app/tabs/_layout.tsx
+// app/tabs/_layout.tsx
 
 import React, { useCallback, useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
@@ -11,6 +11,7 @@ import { AppState } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { useAppStore } from '@/shared/lib/stores/app-store';
+import UserAvatar from '@/shared/ui/UserAvatar';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 
 // --- Reusable Badge Component ---
@@ -100,9 +101,7 @@ function GlobalTabsHeader(props: any) {
           </Pressable>
 
           <Pressable onPress={handleOpenProfile} hitSlop={10}>
-            <View w={36} h={36} br={18} backgroundColor="$gray5" ai="center" jc="center">
-              <Text>{userInitial}</Text>
-            </View>
+            <UserAvatar uri={user?.avatarUrl ?? undefined} label={userInitial} size={36} textSize={14} />
           </Pressable>
         </XStack>
       </XStack>
@@ -173,4 +172,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-

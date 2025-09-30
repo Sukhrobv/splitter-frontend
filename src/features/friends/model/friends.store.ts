@@ -24,11 +24,28 @@ export const useFriendsStore = create<State & Actions>((set, get) => ({
   async fetchAll() {
     set({ loading: true, error: undefined });
     try {
-      const [friends, requestsRaw] = await Promise.all([
+      const [friendsRaw, requestsRaw] = await Promise.all([
         FriendsApi.list(),
         FriendsApi.requests(),
       ]);
-      set({ friends, requestsRaw });
+      const normalizedFriends = friendsRaw.map((item: any) => {
+        const raw = item.raw ?? item;
+        const rawUser = raw.user ?? raw;
+        const avatarUrl = item.avatarUrl ?? raw.avatarUrl ?? rawUser?.avatarUrl ?? null;
+        const uniqueId = item.uniqueId ?? raw.uniqueId ?? rawUser?.uniqueId;
+        const username = item.username ?? raw.username ?? rawUser?.username;
+
+        return {
+          ...raw,
+          user: { ...rawUser, avatarUrl, uniqueId, username },
+          avatarUrl,
+          uniqueId,
+          username,
+          raw,
+        };
+      });
+
+      set({ friends: normalizedFriends, requestsRaw });
     } catch (e: any) {
       set({ error: e?.message || 'Failed to load' });
     } finally {

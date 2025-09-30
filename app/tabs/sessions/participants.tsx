@@ -1,15 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-  YStack, XStack, Button, Spinner, Text, Circle, Input, ScrollView
+  YStack, XStack, Button, Spinner, Text, Input, ScrollView
 } from 'tamagui';
 import { ChevronLeft, Users as UsersIcon, Check } from '@tamagui/lucide-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
+import UserAvatar from '@/shared/ui/UserAvatar';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 
-type LiteUser = { uniqueId: string; username: string };
+type LiteUser = { uniqueId: string; username: string; avatarUrl?: string | null };
 
 export default function SessionParticipantsScreen() {
   const { receiptId } = useLocalSearchParams<{ receiptId?: string }>();
@@ -334,11 +335,12 @@ export default function SessionParticipantsScreen() {
 
           {dedupByUniqueId(filtered).map((p, idx) => {
             const on = !!selected[p.uniqueId];
+            const avatarUrl = p.avatarUrl ?? null;
             return (
               <React.Fragment key={p.uniqueId}>
                 <XStack h={56} ai="center" jc="space-between" px="$4" bg="$color1">
                   <XStack ai="center" gap="$3">
-                    <Circle size={32} backgroundColor="$gray5" />
+                    <UserAvatar uri={avatarUrl ?? undefined} label={(p.username || "U").slice(0, 1).toUpperCase()} size={32} textSize={12} backgroundColor="$gray5" />
                     <YStack>
                       <Text fontSize={16} fontWeight="600">{p.username}</Text>
                       <Text fontSize={12} color="$gray10">

@@ -16,9 +16,11 @@ const ZFriendLoose = z.object({
   user: ZUserLoose.optional(),
   uniqueId: z.string().optional(),
   username: z.string().optional(),
+  avatarUrl: z.string().optional(),
 }).transform((f) => ({
   uniqueId: f.uniqueId ?? f.user?.uniqueId,
   username: f.username ?? f.user?.username,
+  avatarUrl: f.avatarUrl ?? f.user?.avatarUrl ?? null,
   raw: f,
 }));
 

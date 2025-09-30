@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import {
-  YStack, XStack, Paragraph, Separator, Button, Input, Spinner, Circle, Text
+  YStack, XStack, Paragraph, Separator, Button, Input, Spinner, Text
 } from 'tamagui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Crown, Pencil, Trash2, Check, X as IconX, ChevronLeft, QrCode } from '@tamagui/lucide-icons';
 
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
+import UserAvatar from '@/shared/ui/UserAvatar';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 
 const fmtUid = (uid?: string) => (uid ? `@${uid.toLowerCase().replace('user#','user')}` : '');
@@ -245,6 +246,7 @@ export default function GroupDetailsScreen() {
           {members.map((m, idx) => {
             const uid = m.uniqueId;
             const label = m.displayName || m.username || uid;
+            const avatarUrl = m.avatarUrl ?? m.user?.avatarUrl ?? null;
             const isOwnerMember =
               m.role === 'owner' ||
               (typeof m.id === 'number' && typeof ownerId === 'number' && ownerId === m.id);
@@ -254,7 +256,7 @@ export default function GroupDetailsScreen() {
               <React.Fragment key={uid ?? `${label}-${idx}`}>
                 <XStack h={60} ai="center" jc="space-between" px="$4" bg="$green3">
                   <XStack ai="center" gap="$3">
-                    <Circle size={36} backgroundColor="$gray5" />
+                    <UserAvatar uri={avatarUrl ?? undefined} label={(label || "U").slice(0, 1).toUpperCase()} size={36} textSize={14} backgroundColor="$gray5" />
                     <YStack>
                       <Text fontSize={17} fontWeight="600">{label}</Text>
                       {!!uid && <Paragraph fontSize={14} color="$gray10">{fmtUid(uid)}</Paragraph>}
@@ -304,13 +306,14 @@ export default function GroupDetailsScreen() {
           {candidates.map((u, idx) => {
             const uid = u.uniqueId;
             const label = u.displayName || u.username || uid;
+            const avatarUrl = u.avatarUrl ?? u.user?.avatarUrl ?? null;
             const busy = opUid === uid;
 
             return (
               <React.Fragment key={uid ?? `${label}-${idx}`}>
                 <XStack h={60} ai="center" jc="space-between" px="$4">
                   <XStack ai="center" gap="$3">
-                    <Circle size={36} backgroundColor="$gray5" />
+                    <UserAvatar uri={avatarUrl ?? undefined} label={(label || "U").slice(0, 1).toUpperCase()} size={36} textSize={14} backgroundColor="$gray5" />
                     <YStack>
                       <Text fontSize={17} fontWeight="600">{label}</Text>
                       {!!uid && <Paragraph fontSize={14} color="$gray10">{fmtUid(uid)}</Paragraph>}

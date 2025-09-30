@@ -1,12 +1,13 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  YStack, XStack, Input, Button, Paragraph, Separator, Spinner, Circle, Text
+  YStack, XStack, Input, Button, Paragraph, Separator, Spinner, Text
 } from 'tamagui';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Plus, Check, X as IconX, Crown } from '@tamagui/lucide-icons';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
+import UserAvatar from '@/shared/ui/UserAvatar';
 
 function useAutoNotice() {
   const [text, setText] = useState<string | undefined>();
@@ -51,7 +52,7 @@ export default function GroupCreateScreen() {
   const [creating, setCreating] = useState(false);
   const [groupId, setGroupId] = useState<number | undefined>(undefined);
   const [filter, setFilter] = useState('');
-  const [opUid, setOpUid] = useState<string | null>(null); // С‚РµРєСѓС‰РёР№ uid РІ РѕРїРµСЂР°С†РёРё add/remove
+  const [opUid, setOpUid] = useState<string | null>(null); // текущий uid в операции add/remove
 
   useFocusEffect(
     useCallback(() => {
@@ -67,7 +68,7 @@ export default function GroupCreateScreen() {
   useEffect(() => { if (!friends?.length) fetchFriends(); }, [friends?.length, fetchFriends]);
   useEffect(() => { if (groupId) openGroup(groupId); }, [groupId, openGroup]);
 
-  // РєР°СЂС‚Р° СѓС‡Р°СЃС‚РЅРёРєРѕРІ { UID_UPPER -> role }
+  // карта участников { UID_UPPER -> role }
   const memberRole = useMemo(() => {
     const map = new Map<string, string>();
     (current?.members ?? []).forEach(m => {
@@ -77,7 +78,7 @@ export default function GroupCreateScreen() {
     return map;
   }, [current?.members]);
 
-  // РІРµСЃСЊ СЃРїРёСЃРѕРє РґСЂСѓР·РµР№, РѕС‚С„РёР»СЊС‚СЂРѕРІР°РЅРЅС‹Р№ РїРѕРёСЃРєРѕРј
+  // весь список друзей, отфильтрованный поиском
   const rows = useMemo(() => {
     const base = (friends ?? []).map((f: any) => {
       const uid = pickUniqueId(f);
@@ -161,7 +162,7 @@ export default function GroupCreateScreen() {
           <Input
             value={filter}
             onChangeText={setFilter}
-            placeholder="Search friendsвЂ¦"
+            placeholder="Search friends…"
             returnKeyType="search"
           />
 
@@ -185,7 +186,7 @@ export default function GroupCreateScreen() {
                       bg="$background"
                     >
                       <XStack ai="center" gap="$3">
-                        <Circle size={36} backgroundColor="$gray5" />
+                        <UserAvatar uri={r.avatarUrl ?? undefined} label={(r.label || "U").slice(0, 1).toUpperCase()} size={36} textSize={14} backgroundColor="$gray5" />
                         <YStack>
                           <Text fontSize={17} fontWeight="600">{r.label}</Text>
                           {!!r.subtitle && <Paragraph fontSize={14} color="$gray10">{r.subtitle}</Paragraph>}

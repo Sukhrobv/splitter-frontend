@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
-  YStack, XStack, Paragraph, Separator, Button, Spinner, Input, Circle, Text
+  YStack, XStack, Paragraph, Separator, Button, Spinner, Input, Text
 } from 'tamagui';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, CircleCheck, CircleX, QrCode, Scan } from '@tamagui/lucide-icons';
 
 import { useFriendsStore } from '@/features/friends/model/friends.store';
+import UserAvatar from '@/shared/ui/UserAvatar';
 import { FriendsApi } from '@/features/friends/api/friends.api';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 
@@ -152,10 +153,12 @@ export default function FriendsRequestsUnified() {
 
   // слитная строка списка
   function UserRow({
-    title, uid, right, index, total,
-  }: { title: string; uid?: string; right?: React.ReactNode; index: number; total: number }) {
+    title, uid, right, index, total, avatarUrl,
+  }: { title: string; uid?: string; right?: React.ReactNode; index: number; total: number; avatarUrl?: string }) {
     const isFirst = index === 0;
     const isLast  = index === total - 1;
+    const avatarLabel = (title || 'U').slice(0, 1).toUpperCase() || 'U';
+
     return (
       <XStack
         w={LIST_W}
@@ -176,7 +179,13 @@ export default function FriendsRequestsUnified() {
         borderBottomRightRadius={isLast ? 8 : 0}
       >
         <XStack ai="center" gap="$3">
-          <Circle size={36} backgroundColor="$gray5" />
+          <UserAvatar
+            uri={avatarUrl ?? undefined}
+            label={avatarLabel}
+            size={36}
+            textSize={14}
+            backgroundColor="$gray5"
+          />
           <YStack>
             <Text fontSize={17} fontWeight="600">{title}</Text>
             {!!uid && <Paragraph fontSize={14} color="$gray10">{fmtUid(uid)}</Paragraph>}
@@ -256,6 +265,7 @@ export default function FriendsRequestsUnified() {
             <Separator />
             {res.map((u, i) => {
               const uid = u.uniqueId;
+              const avatarUrl = (u as any)?.avatarUrl ?? (u as any)?.user?.avatarUrl ?? null;
               const title = u.displayName || u.username || uid || '—';
               const isMe = !!uid && !!meUniqueId && uid === meUniqueId;
               const isFriend = !!uid && friendsSet.has(uid);
@@ -275,7 +285,7 @@ export default function FriendsRequestsUnified() {
                 <UserRow
                   key={`${uid ?? 'u'}-${i}`}
                   index={i} total={res.length}
-                  title={title!} uid={uid}
+                  title={title!} uid={uid} avatarUrl={avatarUrl ?? undefined}
                   right={
                     <Button
                       size="$2" borderRadius={10} borderWidth={1}
@@ -332,13 +342,14 @@ export default function FriendsRequestsUnified() {
                 const name = r.from?.displayName || r.from?.username || `User #${r.from?.id}`;
                 const uid  = r.from?.uniqueId;
                 const fromId = r.from?.id as number;
+                const avatarUrl = r.from?.avatarUrl ?? null;
                 const isBusy = busyId === fromId;
 
                 return (
                   <UserRow
                     key={`in-${fromId}-${idx}`}
                     index={idx} total={incoming.length}
-                    title={name} uid={uid}
+                    title={name} uid={uid} avatarUrl={avatarUrl ?? undefined}
                     right={
                       <XStack gap={10}>
                         <IconPill
@@ -371,12 +382,13 @@ export default function FriendsRequestsUnified() {
               outgoing.map((r: any, idx: number) => {
                 const name = r.to?.displayName || r.to?.username || r.to?.uniqueId || '—';
                 const uid  = r.to?.uniqueId;
+               const avatarUrl = r.to?.avatarUrl ?? null;
 
                 return (
                   <UserRow
                     key={`out-${uid ?? idx}`}
                     index={idx} total={outgoing.length}
-                    title={name} uid={uid}
+                    title={name} uid={uid} avatarUrl={avatarUrl ?? undefined}
                     right={<Paragraph size="$2" col="$gray10">Requested</Paragraph>}
                   />
                 );
@@ -388,3 +400,4 @@ export default function FriendsRequestsUnified() {
     </YStack>
   );
 }
+

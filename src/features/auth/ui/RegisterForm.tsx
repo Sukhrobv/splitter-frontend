@@ -11,7 +11,7 @@ import { Input } from '@/shared/ui/Input';
 import { Card } from '@/shared/ui/Card';
 import ScreenFormContainer from '@/shared/ui/ScreenFormContainer';
 import PasswordInput from '@/shared/ui/PasswordInput';
-import { register as registerUser, RegisterRequest } from '../api';
+import { register as registerUser, RegisterRequest, getCurrentUser } from '../api';
 import { saveToken } from '@/shared/lib/utils/token-storage';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { User, Mail, Lock } from '@tamagui/lucide-icons';
@@ -39,7 +39,15 @@ export default function RegisterForm() {
       setIsLoading(true);
       const res = await registerUser(values);
       await saveToken(res.token);
-      setAuth(res.token, res.user);
+
+      let profile = res.user;
+      try {
+        profile = await getCurrentUser(res.token);
+      } catch (fetchError) {
+        console.warn('Registration profile refresh failed:', fetchError);
+      }
+
+      setAuth(res.token, profile);
       router.replace('/');
     } catch (error: any) {
       Alert.alert(

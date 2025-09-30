@@ -6,6 +6,7 @@ import { Bell } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useAppStore } from '@/shared/lib/stores/app-store';
+import UserAvatar from '@/shared/ui/UserAvatar';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 
 type Props = {
@@ -17,6 +18,7 @@ export default function TopBar({ title, greeting = false }: Props) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, logout } = useAppStore();
+  const userInitial = (user?.username?.[0] ?? 'U').toUpperCase();
 
   // безопасно читаем количество заявок (без жёстких типов)
   const requestsCount = useFriendsStore((s: any) =>
@@ -95,11 +97,7 @@ export default function TopBar({ title, greeting = false }: Props) {
 
           {/* Аватар по первой букве имени */}
           <XStack pressStyle={{ opacity: 0.8 }} onPress={onAvatarPress}>
-            <Circle size={28} backgroundColor="$gray4" ai="center" jc="center">
-              <Text fontWeight="700" color="$gray11">
-                {(user?.username?.[0] ?? 'U').toUpperCase()}
-              </Text>
-            </Circle>
+            <UserAvatar uri={user?.avatarUrl ?? undefined} label={userInitial} size={28} textSize={14} backgroundColor="$gray4" />
           </XStack>
         </XStack>
       </XStack>

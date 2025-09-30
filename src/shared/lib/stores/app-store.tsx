@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCurrentUser } from '@/features/auth/api';
 import { getToken, removeToken } from '../utils/token-storage';
 
 export interface User {
@@ -8,6 +9,7 @@ export interface User {
   email: string;
   username: string;
   uniqueId: string;
+  avatarUrl: string | null;
 }
 
 interface AppStore {
@@ -63,14 +65,27 @@ export const useAppStore = create<AppStore>()(
       },
 
       initializeAuth: async () => {
+        set({ isLoading: true });
         try {
-          set({ isLoading: true });
           const token = await getToken();
-          if (token) {
-            set({ token });
-            // Здесь можно загрузить информацию о пользователе
-            // const user = await getCurrentUser(token);
-            // set({ user });
+          if (!token) {
+            set({ token: null, user: null });
+            return;
+          }
+
+          set({ token });
+
+          try {
+            const currentUser = await getCurrentUser(token);
+            set({ user: currentUser });
+          } catch (error) {
+            console.error('Current user fetch error:', error);
+            set({ user: null });
+
+            if (error instanceof Error && /authorization/i.test(error.message)) {
+              await removeToken();
+              set({ token: null, user: null });
+            }
           }
         } catch (error) {
           console.error('Auth initialization error:', error);
