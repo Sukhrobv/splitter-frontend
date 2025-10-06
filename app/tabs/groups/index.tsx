@@ -1,37 +1,72 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { YStack, Paragraph, Card, XStack, Spinner, Separator, View, Button } from 'tamagui';
 import { useRouter } from 'expo-router';
 import { Scan } from '@tamagui/lucide-icons';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
+import type { GroupMember } from '@/features/groups/api/groups.api';
+import UserAvatar from '@/shared/ui/UserAvatar';
 import Fab from '@/shared/ui/Fab';
 
-function Avatar({ i }: { i: number }) {
-  // плейсхолдер-аватар
-  return <View w={34} h={34} br={17} bg="$gray5" ml={i === 0 ? 0 : -10} />;
-}
-
 function AvatarStack({
-  previewCount = 0,
+  members,
+  totalCount,
   max = 5,
-}: { previewCount?: number; max?: number }) {
-  if (!previewCount) return null;
-  const shown = Math.min(previewCount, max);
-  const rest = previewCount - shown;
+}: {
+  members?: GroupMember[];
+  totalCount?: number;
+  max?: number;
+}) {
+  const list = Array.isArray(members) ? members : [];
+  const total = typeof totalCount === 'number' ? totalCount : list.length;
+  const shownMembers = list.slice(0, Math.min(max, list.length));
+  const hasMembers = shownMembers.length > 0;
+  const placeholderCount = hasMembers ? 0 : Math.min(total, max);
+  const extra = Math.max(0, total - (hasMembers ? shownMembers.length : placeholderCount));
+
+  if (!hasMembers && placeholderCount === 0) {
+    return null;
+  }
+
+  const labelFor = (member: GroupMember) => {
+    const source = member.displayName || member.username || member.uniqueId || '';
+    return source.trim().charAt(0).toUpperCase() || 'U';
+  };
 
   return (
     <XStack ai="center">
-      {Array.from({ length: shown }).map((_, i) => (
-        <Avatar key={i} i={i} />
+      {shownMembers.map((member, index) => (
+        <View key={`${member.uniqueId ?? 'member'}-${index}`} ml={index === 0 ? 0 : -10}>
+          <UserAvatar
+            uri={member.avatarUrl ?? member.user?.avatarUrl ?? undefined}
+            label={labelFor(member)}
+            size={34}
+            textSize={14}
+            backgroundColor="$gray5"
+          />
+        </View>
       ))}
-      {rest > 0 && (
-        <View w={28} h={28} br={14} bg="$gray8" ai="center" jc="center" ml={-10}>
-          <Paragraph size="$1" col="white">+{rest}</Paragraph>
+      {!hasMembers &&
+        Array.from({ length: placeholderCount }).map((_, index) => (
+          <View key={`placeholder-${index}`} w={34} h={34} br={17} bg="$gray5" ml={index === 0 ? 0 : -10} />
+        ))}
+      {extra > 0 && (
+        <View
+          w={28}
+          h={28}
+          br={14}
+          bg="$gray8"
+          ai="center"
+          jc="center"
+          ml={hasMembers || placeholderCount > 0 ? -10 : 0}
+        >
+          <Paragraph size="$1" col="white">
+            +{extra}
+          </Paragraph>
         </View>
       )}
     </XStack>
   );
 }
-
 export default function GroupsListScreen() {
   const router = useRouter();
   const { groups, counts, loading, error, fetchGroups } = useGroupsStore();
@@ -69,8 +104,16 @@ export default function GroupsListScreen() {
       ) : (
         <YStack gap="$3">
           {groups.map((g) => {
-            const count = counts?.[g.id];         // если стор заполняет
-            const preview = typeof count === 'number' ? count : 0;
+            const members = Array.isArray(g.members) ? g.members : [];
+            const storedCount = counts?.[g.id];
+            const apiCount = typeof g.counts?.members === 'number' ? g.counts.members : undefined;
+            const memberCount =
+              typeof storedCount === 'number'
+                ? storedCount
+                : typeof apiCount === 'number'
+                ? apiCount
+                : members.length;
+            const countLabel = memberCount === 1 ? '1 member' : `${memberCount} members`;
             return (
               <Card
                 key={g.id}
@@ -90,10 +133,10 @@ export default function GroupsListScreen() {
                   <YStack>
                     <Paragraph fow="700" fos={16}>{g.name ?? 'Group'}</Paragraph>
                     <Paragraph size={12} col="$gray10">
-                      {typeof count === 'number' ? `${count} members` : '—'}
+                      {memberCount === 0 ? 'No members yet' : countLabel}
                     </Paragraph>
                   </YStack>
-                  <AvatarStack previewCount={preview} />
+                  <AvatarStack members={members} totalCount={memberCount} />
                 </XStack>
               </Card>
             );

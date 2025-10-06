@@ -6,14 +6,18 @@ export type Group = {
   id: number;
   name: string;
   ownerId?: number;
+  members?: GroupMember[];
+  counts?: { members?: number; sessions?: number };
 };
 
 export type GroupMember = {
   uniqueId: string;
   username?: string;
   displayName?: string;
+  avatarUrl?: string | null;
   id?: number; // backend may include numeric id
   role?: 'owner' | 'member';
+  user?: { avatarUrl?: string | null };
 };
 
 export type GroupDetails = {

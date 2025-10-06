@@ -31,9 +31,22 @@ export const useGroupsStore = create<State & Actions>((set, get) => ({
     set({ loading: true, error: undefined });
     try {
       const groups = await GroupsApi.list();
-      set({ groups });
-      // РЅРµ Р±Р»РѕРєРёСЂСѓРµРј UI: РїРѕРґС‚СЏРЅРµРј counts РѕС‚РґРµР»СЊРЅРѕ
-      get().hydrateCounts().catch(() => {});
+      const countsFromGroups = groups.reduce<Record<number, number>>((acc, group) => {
+        if (Array.isArray(group.members)) {
+          acc[group.id] = group.members.length;
+        } else if (typeof group.counts?.members === 'number') {
+          acc[group.id] = group.counts.members;
+        }
+        return acc;
+      }, {});
+      set(state => ({
+        groups,
+        counts: { ...state.counts, ...countsFromGroups },
+      }));
+      const needsHydrate = groups.some(group => !Array.isArray(group.members));
+      if (needsHydrate) {
+        get().hydrateCounts().catch(() => {});
+      }
     } catch (e: any) {
       set({ error: e?.message ?? 'Failed to load groups' });
     } finally {
@@ -43,25 +56,38 @@ export const useGroupsStore = create<State & Actions>((set, get) => ({
 
   async hydrateCounts() {
     const { groups } = get();
-    if (!groups?.length) return;
-    const results = await Promise.allSettled(groups.map(g => GroupsApi.details(g.id)));
+    const targets = (groups ?? []).filter(group => !Array.isArray(group.members));
+    if (!targets.length) return;
+    const results = await Promise.allSettled(targets.map(group => GroupsApi.details(group.id)));
     const map: Record<number, number> = {};
-    results.forEach((r, idx) => {
-      if (r.status === 'fulfilled') {
-        const g = groups[idx];
-        map[g.id] = r.value?.members?.length ?? 0;
+    const updatedGroups = [...groups];
+    results.forEach((result, idx) => {
+      if (result.status === 'fulfilled') {
+        const groupId = targets[idx].id;
+        map[groupId] = result.value?.members?.length ?? 0;
+        const index = updatedGroups.findIndex(g => g.id === groupId);
+        if (index !== -1) {
+          updatedGroups[index] = { ...updatedGroups[index], members: result.value.members };
+        }
       }
     });
-    set(s => ({ counts: { ...s.counts, ...map } }));
+    set(state => ({
+      counts: { ...state.counts, ...map },
+      groups: updatedGroups,
+    }));
   },
 
   async openGroup(groupId) {
     set({ loading: true, error: undefined });
     try {
       const current = await GroupsApi.details(groupId);
-      set({ current });
-      // РѕР±РЅРѕРІРёРј СЃС‡С‘С‚С‡РёРє
-      set(s => ({ counts: { ...s.counts, [groupId]: current.members?.length ?? 0 } }));
+      set(state => ({
+        current,
+        counts: { ...state.counts, [groupId]: current.members?.length ?? 0 },
+        groups: state.groups.map(group =>
+          group.id === groupId ? { ...group, members: current.members } : group
+        ),
+      }));
     } catch (e: any) {
       set({ error: e?.message ?? 'Failed to load group' });
     } finally {

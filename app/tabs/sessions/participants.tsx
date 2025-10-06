@@ -9,6 +9,7 @@ import { useFriendsStore } from '@/features/friends/model/friends.store';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useGroupsStore } from '@/features/groups/model/groups.store';
+import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
 
 type LiteUser = { uniqueId: string; username: string; avatarUrl?: string | null };
 
@@ -21,6 +22,9 @@ export default function SessionParticipantsScreen() {
   const me = useAppStore(s => s.user);
   const { friends, loading: friendsLoading, error: friendsError, fetchAll: fetchFriends } = useFriendsStore();
   const { groups, counts, fetchGroups, openGroup } = useGroupsStore();
+
+  const session = useReceiptSessionStore((s) => s.session);
+  const setReceiptParticipants = useReceiptSessionStore((s) => s.setParticipants);
 
   // -------- state --------
   const [q, setQ] = useState('');
@@ -212,11 +216,19 @@ export default function SessionParticipantsScreen() {
     const participants = unionPeople
       .filter(p => selected[p.uniqueId])
       .map(p => ({ uniqueId: p.uniqueId, username: p.username }));
-    const qs = new URLSearchParams({
-      receiptId: receiptId ?? 'mock-001',
-      participants: encodeURIComponent(JSON.stringify(participants)),
-    }).toString();
-    router.push(`/tabs/sessions/items-split?${qs}` as any);
+
+    setReceiptParticipants(participants);
+
+    const sessionId = session?.sessionId ? String(session.sessionId) : undefined;
+    const params = new URLSearchParams();
+    const effectiveReceiptId = receiptId ?? sessionId;
+    if (effectiveReceiptId) params.set('receiptId', effectiveReceiptId);
+    if (participants.length > 0) {
+      params.set('participants', encodeURIComponent(JSON.stringify(participants)));
+    }
+    const qs = params.toString();
+    const target = qs ? `/tabs/sessions/items-split?${qs}` : '/tabs/sessions/items-split';
+    router.push(target as any);
   };
 
   // UI: Select pill (84×29)
