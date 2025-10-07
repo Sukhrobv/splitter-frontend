@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   YStack, XStack, Button, Spinner, Text, Input, ScrollView
 } from 'tamagui';
-import { ChevronLeft, Users as UsersIcon, Check } from '@tamagui/lucide-icons';
+import { Users as UsersIcon, Check } from '@tamagui/lucide-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import UserAvatar from '@/shared/ui/UserAvatar';
@@ -211,7 +211,6 @@ export default function SessionParticipantsScreen() {
   const canNext = selectedList.length >= 2;
 
   const fmtUid = (uid: string) => `@${uid.toLowerCase().replace('user#', 'user')}`;
-  const goBack = () => router.back();
   const goNext = () => {
     const participants = unionPeople
       .filter(p => selected[p.uniqueId])
@@ -293,10 +292,6 @@ export default function SessionParticipantsScreen() {
 
   return (
     <YStack f={1} bg="$background" p="$4" position="relative">
-      {/* Back */}
-      <XStack ai="center" jc="flex-start" mb="$2">
-        <Button size="$2" h={28} chromeless onPress={goBack} icon={<ChevronLeft size={18} />}>Back</Button>
-      </XStack>
 
       {/* Groups */}
       {(groups ?? []).length > 0 && (

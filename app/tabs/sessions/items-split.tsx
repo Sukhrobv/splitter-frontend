@@ -3,14 +3,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable } from 'react-native';
-import { YStack, XStack, Text, Button, Circle, ScrollView, View, Spinner } from 'tamagui';
-import { ChevronLeft, Users as UsersIcon, Check, Plus, Minus, Package as PackageIcon } from '@tamagui/lucide-icons';
+import { YStack, XStack, Text, Button, Circle, ScrollView, Spinner } from 'tamagui';
+import { Users as UsersIcon, Check, Plus, Minus, Package as PackageIcon } from '@tamagui/lucide-icons';
 
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { useReceiptSessionStore } from '@/features/receipt/model/receipt-session.store';
 import type { ReceiptSplitItem } from '@/features/receipt/model/receipt-session.store';
 import { ReceiptApi } from '@/features/receipt/api/receipt.api';
-import type { FinalizeReceiptItemPayload } from '@/features/receipt/api/receipt.api';
+import type { FinalizeReceiptItemPayload, FinalizeTotalsByItem, FinalizeTotalsByParticipant, ReceiptAllocation } from '@/features/receipt/api/receipt.api';
 
 // ===== Types =====
 type Participant = { uniqueId: string; username: string };
@@ -128,6 +128,85 @@ const toStoreItems = (source: Item[]): ReceiptSplitItem[] =>
     };
   });
 
+const computeItemTotal = (item: Item) =>
+  typeof item.totalPrice === 'number' ? item.totalPrice : item.price * item.quantity;
+
+const buildLocalFinalization = (items: Item[], participants: Participant[]) => {
+  const totalsByItem: FinalizeTotalsByItem[] = [];
+  const allocations: ReceiptAllocation[] = [];
+
+  const participantTotals = participants.reduce<Record<string, number>>((acc, participant) => {
+    acc[participant.uniqueId] = 0;
+    return acc;
+  }, {});
+
+  for (const item of items) {
+    const total = computeItemTotal(item);
+    totalsByItem.push({ itemId: item.id, name: item.name, total });
+
+    const mode = ensureMode(item);
+
+    if (mode === 'count') {
+      const perPersonCount = item.perPersonCount ?? {};
+      for (const [uid, rawCount] of Object.entries(perPersonCount)) {
+        const count = Number(rawCount);
+        if (!uid || Number.isNaN(count) || count <= 0) continue;
+
+        const shareAmount = count * item.price;
+        if (!(uid in participantTotals)) {
+          participantTotals[uid] = 0;
+        }
+        participantTotals[uid] = (participantTotals[uid] ?? 0) + shareAmount;
+
+        allocations.push({
+          itemId: item.id,
+          participantId: uid,
+          shareAmount,
+          shareUnits: count,
+        });
+      }
+
+      continue;
+    }
+
+    const assigned = (item.assignedTo ?? []).filter(Boolean);
+    const shareCount = assigned.length;
+    if (shareCount === 0) continue;
+
+    const shareAmount = total / shareCount;
+    const shareRatio = 1 / shareCount;
+
+    assigned.forEach((uid) => {
+      if (!(uid in participantTotals)) {
+        participantTotals[uid] = 0;
+      }
+      participantTotals[uid] = (participantTotals[uid] ?? 0) + shareAmount;
+
+      allocations.push({
+        itemId: item.id,
+        participantId: uid,
+        shareAmount,
+        shareRatio,
+      });
+    });
+  }
+
+  const totalsByParticipant: FinalizeTotalsByParticipant[] = participants.map((participant) => ({
+    uniqueId: participant.uniqueId,
+    username: participant.username,
+    amountOwed: participantTotals[participant.uniqueId] ?? 0,
+  }));
+
+  const grandTotal = totalsByItem.reduce((acc, entry) => acc + entry.total, 0);
+
+  return {
+    totalsMap: participantTotals,
+    totalsByParticipant,
+    totalsByItem,
+    allocations,
+    grandTotal,
+  };
+};
 // ===== Helpers =====
 const parseParticipantsParam = (raw?: string): Participant[] => {
   if (!raw) return [];
@@ -280,31 +359,6 @@ export default function ItemsSplitScreen() {
       setSubmitError(null);
     }
   }, [canContinue, submitError]);
-
-  const totalsByParticipant = useMemo(() => {
-    const totals: Record<string, number> = {};
-    participants.forEach((p) => (totals[p.uniqueId] = 0));
-
-    for (const it of items) {
-      const total =
-        typeof it.totalPrice === 'number' ? it.totalPrice : it.price * it.quantity;
-
-      if (it.splitMode === 'count' && it.perPersonCount) {
-        for (const [uid, cnt] of Object.entries(it.perPersonCount)) {
-          if (!cnt) continue;
-          totals[uid] = (totals[uid] || 0) + cnt * it.price;
-        }
-        continue;
-      }
-
-      const k = it.assignedTo.length;
-      if (k === 0) continue;
-      const share = total / k;
-      for (const uid of it.assignedTo) totals[uid] = (totals[uid] || 0) + share;
-    }
-
-    return totals;
-  }, [items, participants]);
 
   // --- modal helpers ---
   const editingItem = editing ? items.find((it) => it.id === editing.id) : null;
@@ -530,6 +584,8 @@ export default function ItemsSplitScreen() {
         throw new Error('Session ID is required');
       }
 
+      const fallbackFinalization = buildLocalFinalization(items, participants);
+
       const result = await ReceiptApi.finalize({
         sessionId: effectiveSessionId,
         sessionName: session?.sessionName || 'Split Session',
@@ -540,11 +596,30 @@ export default function ItemsSplitScreen() {
         items: finalizeItems,
       });
 
-      const totalsFromResponse =
-        result.totals?.byParticipant?.reduce<Record<string, number>>((acc, entry) => {
-          acc[entry.uniqueId] = entry.amountOwed;
-          return acc;
-        }, {}) ?? totalsByParticipant;
+      const backendByParticipant = result.totals?.byParticipant ?? [];
+      const hasBackendByParticipant = backendByParticipant.length > 0;
+
+      const effectiveByParticipant = hasBackendByParticipant
+        ? backendByParticipant
+        : fallbackFinalization.totalsByParticipant;
+
+      const totalsFromResponse = hasBackendByParticipant
+        ? backendByParticipant.reduce<Record<string, number>>((acc, entry) => {
+            acc[entry.uniqueId] = entry.amountOwed;
+            return acc;
+          }, {})
+        : { ...fallbackFinalization.totalsMap };
+
+      const backendByItem = result.totals?.byItem ?? [];
+      const totalsByItem = backendByItem.length > 0 ? backendByItem : fallbackFinalization.totalsByItem;
+
+      const backendAllocations = result.allocations ?? [];
+      const allocations = backendAllocations.length > 0 ? backendAllocations : fallbackFinalization.allocations;
+
+      const grandTotal =
+        typeof result.totals?.grandTotal === 'number'
+          ? result.totals.grandTotal
+          : fallbackFinalization.grandTotal;
 
       const finishPayload = {
         sessionId: result.sessionId,
@@ -552,9 +627,10 @@ export default function ItemsSplitScreen() {
         receiptId: sessionReceiptId ?? (isMockSession ? 'mock-001' : undefined),
         participants,
         totals: totalsFromResponse,
-        grandTotal: result.totals?.grandTotal,
-        totalsByItem: result.totals?.byItem,
-        allocations: result.allocations,
+        totalsByParticipant: effectiveByParticipant,
+        grandTotal,
+        totalsByItem,
+        allocations,
         status: result.status,
         createdAt: result.createdAt,
       };
@@ -593,7 +669,6 @@ export default function ItemsSplitScreen() {
     sessionReceiptId,
     isMockSession,
     participants,
-    totalsByParticipant,
     setStoreItems,
     router,
     resetState,
@@ -650,17 +725,8 @@ export default function ItemsSplitScreen() {
     <YStack f={1} bg="$background" position="relative">
       {/* Header */}
       <YStack bg="$background" p="$4" pb="$2">
-        <XStack ai="center" jc="space-between" mb="$3">
-          <Button
-            size="$2"
-            h={28}
-            chromeless
-            onPress={() => router.back()}
-            icon={<ChevronLeft size={18} />}
-          >
-            Back
-          </Button>
-          <YStack ai="center">
+        <XStack w="100%" ai="center" jc="flex-start" mb="$3">
+          <YStack ai="flex-start">
             <Text fontSize={16} fontWeight="700">
               Orders
             </Text>
@@ -668,7 +734,6 @@ export default function ItemsSplitScreen() {
               {sessionReceiptId ?? (isMockSession ? 'mock-001' : 'N/A')}
             </Text>
           </YStack>
-          <View w={54} />
         </XStack>
       </YStack>
 
@@ -681,7 +746,7 @@ export default function ItemsSplitScreen() {
         <YStack px="$4" gap="$3">
           {/* Participants */}
           <YStack>
-            <XStack ai="center" jc="space-between" mb="$2">
+            <XStack w="100%" ai="center" jc="flex-start" mb="$2">
               <XStack ai="center" gap="$2">
                 <UsersIcon size={18} color="$gray10" />
                 <Text fontWeight="700">Participants ({participants.length})</Text>
@@ -804,7 +869,7 @@ export default function ItemsSplitScreen() {
         </YStack>
       </ScrollView>
 
-      {/* Bottom progress → button */}
+      {/* Bottom progress -> button */}
       <YStack
         position="absolute"
         left={0}
@@ -814,7 +879,7 @@ export default function ItemsSplitScreen() {
       >
         {!canContinue ? (
           <YStack p="$3" borderWidth={1} borderColor="$gray5" borderRadius={12} bg="$color1">
-            <XStack jc="space-between" mb="$2">
+            <XStack w="100%" ai="center" jc="space-between" mb="$2">
               <Text color="$gray10" fontSize={13}>
                 Assignment progress
               </Text>
@@ -871,7 +936,7 @@ export default function ItemsSplitScreen() {
             p="$3"
           >
             {/* Header product + price */}
-            <XStack jc="space-between" ai="center" mb="$3">
+            <XStack w="100%" ai="center" jc="space-between" mb="$3">
               <Text fontSize={16} fontWeight="700" numberOfLines={1}>
                 {editingItem?.name}
                 {editingItem && editingItem.quantity > 1 ? ` (${editingItem.quantity}x)` : ''}
@@ -903,7 +968,7 @@ export default function ItemsSplitScreen() {
               </XStack>
             )}
 
-            <XStack jc="space-between" ai="center" mb="$2">
+            <XStack w="100%" ai="center" jc="space-between" mb="$2">
               <Text fontWeight="600">Assign to:</Text>
               <XStack ai="center" gap="$2">
                 <Button chromeless onPress={modalAll}>

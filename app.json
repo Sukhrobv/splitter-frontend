@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.Sukhrob.receiptsplitter",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
