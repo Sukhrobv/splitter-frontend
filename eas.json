@@ -1,9 +1,13 @@
 {
+  "cli": { "appVersionSource": "remote" },
   "build": {
     "preview": {
       "distribution": "internal",
-      "android": {
-        "buildType": "apk"
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://54.178.11.40:8080",
+        "API_TIMEOUT": "10000",
+        "NODE_ENV": "production",
+        "DEBUG_API": "false"
       }
     }
   }
