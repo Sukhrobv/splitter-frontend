@@ -6,7 +6,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -37,9 +39,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "19a45342-1356-4ee7-b72b-385430cf5363"
+        "projectId": "7917fbd1-3481-434b-a412-0ed16df7bda4"
       }
     },
-    "owner": "sukhrob2"
+    "owner": "sukhrob3"
   }
 }
