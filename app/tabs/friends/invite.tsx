@@ -36,7 +36,7 @@ export default function FriendInviteScreen() {
       <YStack f={1} p="$4" gap="$4" bg="$background">
         {/* Header */}
         <XStack ai="center" jc="space-between">
-          <Button
+          {/* <Button
             size="$2"
             h={28}
             chromeless
@@ -44,7 +44,7 @@ export default function FriendInviteScreen() {
             icon={<ChevronLeft size={18} color="$gray12" />}
           >
             Back
-          </Button>
+          </Button> */}
           <XStack ai="center" gap="$2">
             <QrCode size={18} color="$gray12" />
             <Paragraph fow="700" fos="$6">My Friend QR</Paragraph>
@@ -71,7 +71,7 @@ export default function FriendInviteScreen() {
             <>
               <Paragraph>Failed to get invite</Paragraph>
               <Button onPress={refresh}>Retry</Button>
-              <Button onPress={goBack} variant="outlined">Back</Button>
+              {/* <Button onPress={goBack} variant="outlined">Back</Button> */}
             </>
           )}
         </YStack>

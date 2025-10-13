@@ -215,7 +215,7 @@ export default function ScanReceiptScreen() {
           </YStack>
 
           <Paragraph color="$gray1" fontSize={12}>
-            OCR language: <Text fontWeight="700" color="white">{language}</Text>
+            language: <Text fontWeight="700" color="white">{language}</Text>
           </Paragraph>
 
           {storedCapture?.uri && (
