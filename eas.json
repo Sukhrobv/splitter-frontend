@@ -1,8 +1,27 @@
 {
-  "cli": { "appVersionSource": "remote" },
+  "cli": { 
+    "appVersionSource": "remote",
+    "version": ">= 5.2.0"
+  },
   "build": {
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://54.178.11.40:8080",
+        "EXPO_PUBLIC_API_TIMEOUT": "10000",
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_DEBUG_API": "false"
+      },
+      "node": "20.18.0"
+    },
+    "production": {
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "http://54.178.11.40:8080",
         "EXPO_PUBLIC_API_TIMEOUT": "10000",
@@ -12,4 +31,3 @@
     }
   }
 }
-  

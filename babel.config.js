@@ -5,11 +5,20 @@ module.exports = function (api) {
     plugins: [
       'expo-router/babel',
       [
+        '@tamagui/babel-plugin',
+        {
+          components: ['tamagui'],
+          config: './tamagui.config.ts',
+          logTimings: true,
+          disableExtraction: process.env.NODE_ENV === 'development'
+        }
+      ],
+      [
         'module-resolver',
         {
           root: ['./'],
           alias: {
-            '@': './src' // <-- теперь импорты вида '@/features/...' смотрят в ./src
+            '@': './src'
           },
           extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
         }

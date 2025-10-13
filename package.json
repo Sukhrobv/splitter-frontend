@@ -23,6 +23,7 @@
     "@tanstack/react-query": "^5.85.3",
     "axios": "^1.11.0",
     "expo": "54.0.13",
+    "expo-build-properties": "^1.0.9",
     "expo-camera": "~17.0.8",
     "expo-clipboard": "~8.0.7",
     "expo-constants": "~18.0.8",
@@ -68,7 +69,7 @@
     "@types/yargs": "^17.0.33",
     "@types/yargs-parser": "^21.0.3",
     "babel-plugin-module-resolver": "^5.0.2",
-    "expo-build-properties": "^1.0.9",
+    "babel-preset-expo": "~12.0.1",
     "typescript": "~5.9.2"
   },
   "overrides": {
