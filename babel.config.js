@@ -3,7 +3,18 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'react-native-reanimated/plugin', // должен быть последним
-    ],
+      'expo-router/babel',
+      [
+        'module-resolver',
+        {
+          root: ['./'],
+          alias: {
+            '@': './src' // <-- теперь импорты вида '@/features/...' смотрят в ./src
+          },
+          extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
+        }
+      ],
+      'react-native-reanimated/plugin' // должен быть последним
+    ]
   };
 };
