@@ -4,19 +4,19 @@ import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { YStack, XStack, Text, Button, Separator, Spinner } from 'tamagui';
-import { Copy, LogOut, Upload, RotateCcw, CheckCircle, User as UserIcon, Mail, Lock, Edit3, X, Check } from '@tamagui/lucide-icons';
-
+import { Copy, LogOut, Upload, RotateCcw, CheckCircle, User as UserIcon, Mail, Lock, Edit3, X, Check, Languages } from '@tamagui/lucide-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { useTranslation } from 'react-i18next';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import Input from '@/shared/ui/Input';
 import PasswordInput from '@/shared/ui/PasswordInput';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { changePassword, resetAvatar, updateEmail, updateUsername, uploadAvatar } from '@/features/auth/api';
+import { LANGUAGE_OPTIONS, type LanguageCode } from '@/shared/config/languages';
+import { LanguageSegmentedControl } from '@/shared/ui/LanguageSegmentedControl';
 
 type SuccessKey = 'avatar' | 'password';
-
 type StatusState = 'idle' | 'saving' | 'success';
 
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
@@ -266,6 +266,11 @@ function EditableFieldRow({
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout, setUser } = useAppStore();
+
+  // language from store
+  const language = useAppStore((s) => s.language);
+  const { t } = useTranslation();
+  const setLanguage = useAppStore((s) => s.setLanguage);
 
   const displayName = user?.username || 'Guest';
   const userId = user?.uniqueId ?? '';
@@ -593,6 +598,7 @@ export default function ProfileScreen() {
         >
           <ScreenContainer>
             <YStack gap="$3" pb="$6">
+              {/* Avatar */}
               <SectionCard
                 title="Avatar"
                 icon={<Upload size={18} color="$gray11" />}
@@ -634,6 +640,23 @@ export default function ProfileScreen() {
                 </YStack>
               </SectionCard>
 
+              {/* Language */}
+              <SectionCard title="Language" icon={/* оставь свою иконку */ <Languages size={18} color="$gray11" />}>
+  <YStack gap="$2">
+    <Text fontSize={12} color="$gray9">
+      {t('settings.language.description', 'Choose the language used across the app.')}
+    </Text>
+
+    <LanguageSegmentedControl
+      value={language}
+      onChange={(code) => setLanguage(code)}
+      getLabel={(code, fallback) => t(`settings.language.options.${code}`, fallback)}
+    />
+  </YStack>
+</SectionCard>
+
+
+              {/* User info */}
               <SectionCard title="User information" icon={<UserIcon size={18} color="$gray11" />}>
                 <EditableFieldRow
                   label="Username"
@@ -677,11 +700,8 @@ export default function ProfileScreen() {
                 <InfoRow label="User ID" value={userId || 'N/A'} onCopy={() => handleCopy('User ID', userId)} />
               </SectionCard>
 
-              <SectionCard
-                title="Change password"
-                icon={<Lock size={18} color="$gray11" />}
-                successTrigger={successCounters.password}
-              >
+              {/* Password */}
+              <SectionCard title="Change password" icon={<Lock size={18} color="$gray11" />} successTrigger={successCounters.password}>
                 <YStack gap="$3">
                   <PasswordInput
                     label="Current password"
@@ -720,6 +740,7 @@ export default function ProfileScreen() {
                 </YStack>
               </SectionCard>
 
+              {/* Logout */}
               <Button
                 size="$3"
                 bg="$red4"
@@ -738,4 +759,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-

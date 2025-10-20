@@ -3,6 +3,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUser } from '@/features/auth/api';
 import { getToken, removeToken } from '../utils/token-storage';
+import type { LanguageCode } from '@/shared/config/languages';
+import { DEFAULT_LANGUAGE } from '@/shared/config/languages';
 
 export interface User {
   id: number;
@@ -20,7 +22,7 @@ interface AppStore {
   
   // App settings
   theme: 'light' | 'dark';
-  language: 'en' | 'ja' | 'ru';
+  language: LanguageCode;
   
   // Actions
   setToken: (token: string) => void;
@@ -29,7 +31,7 @@ interface AppStore {
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
   setTheme: (theme: 'light' | 'dark') => void;
-  setLanguage: (language: 'en' | 'ja' | 'ru') => void;
+  setLanguage: (language: LanguageCode) => void;
 }
 
 export const useAppStore = create<AppStore>()(
@@ -40,7 +42,7 @@ export const useAppStore = create<AppStore>()(
       user: null,
       isLoading: false,
       theme: 'light',
-      language: 'ru',
+      language: DEFAULT_LANGUAGE,
 
       // Auth actions
       setToken: (token: string) => {

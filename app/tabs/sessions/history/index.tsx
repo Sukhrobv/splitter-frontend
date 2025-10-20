@@ -1,28 +1,42 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable } from 'react-native';
 import { YStack, XStack, Text, ScrollView, View } from 'tamagui';
 
-import { BILL_HISTORY } from '@/features/sessions/mock/history';
+import UserAvatar from '@/shared/ui/UserAvatar';
+import type { SessionHistoryParticipant } from '@/features/sessions/api/history.api';
+import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
 
 const BULLET = '\u2022';
+const HISTORY_LIMIT = 50;
 
-function AvatarGroup({ count }: { count: number }) {
-  const shown = Math.min(4, count);
-  const extra = Math.max(0, count - shown);
+const formatSessionDate = (value?: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('uz-UZ', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+function AvatarGroup({ participants }: { participants: SessionHistoryParticipant[] }) {
+  const shown = participants.slice(0, 4);
+  const extra = Math.max(0, participants.length - shown.length);
   return (
     <XStack ai="center">
-      {Array.from({ length: shown }).map((_, idx) => (
-        <View
-          key={idx}
-          w={28}
-          h={28}
-          br={14}
-          backgroundColor="#E4E7EB"
-          borderWidth={2}
-          borderColor="white"
-          ml={idx === 0 ? 0 : -8}
-        />
+      {shown.map((participant, idx) => (
+        <View key={participant.uniqueId ?? idx} ml={idx === 0 ? 0 : -8}>
+          <UserAvatar
+            uri={participant.avatarUrl ?? undefined}
+            label={(participant.username || 'U').slice(0, 1).toUpperCase()}
+            size={28}
+            textSize={12}
+            backgroundColor="$gray5"
+          />
+        </View>
       ))}
       {extra > 0 && (
         <View
@@ -32,7 +46,7 @@ function AvatarGroup({ count }: { count: number }) {
           backgroundColor="#CBD5F5"
           borderWidth={2}
           borderColor="white"
-          ml={shown === 0 ? 0 : -8}
+          ml={shown.length === 0 ? 0 : -8}
           ai="center"
           jc="center"
         >
@@ -53,7 +67,7 @@ function HistoryCard({
   title: string;
   summary: string;
   amount: number;
-  participants: number;
+  participants: SessionHistoryParticipant[];
   onPress: () => void;
 }) {
   return (
@@ -84,7 +98,7 @@ function HistoryCard({
         </XStack>
 
         <XStack mt="auto" ai="center">
-          <AvatarGroup count={participants} />
+          <AvatarGroup participants={participants} />
         </XStack>
       </YStack>
     </Pressable>
@@ -93,6 +107,21 @@ function HistoryCard({
 
 export default function SessionsHistoryScreen() {
   const router = useRouter();
+  const sessions = useSessionsHistoryStore(state => state.sessions);
+  const loading = useSessionsHistoryStore(state => state.loading);
+  const initialized = useSessionsHistoryStore(state => state.initialized);
+  const currentLimit = useSessionsHistoryStore(state => state.limit);
+  const error = useSessionsHistoryStore(state => state.error);
+  const fetchHistory = useSessionsHistoryStore(state => state.fetchHistory);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!initialized || (currentLimit ?? 0) < HISTORY_LIMIT) {
+      fetchHistory(HISTORY_LIMIT).catch(() => {});
+    }
+  }, [initialized, loading, currentLimit, fetchHistory]);
+
+  const history = useMemo(() => sessions, [sessions]);
 
   return (
     <YStack f={1} bg="$background" px="$4" pt="$4">
@@ -105,17 +134,38 @@ export default function SessionsHistoryScreen() {
           <Text fontSize={12} color="$gray10">Bosh sahifa</Text>
         </YStack>
 
-        {BILL_HISTORY.map((bill) => {
-          const summary = `${bill.date} ${BULLET} ${bill.participantsCount} ishtirokchi`;
+        {loading && (
+          <Text color="$gray10" fontSize={14}>
+            Yuklanmoqda...
+          </Text>
+        )}
+        {error && (
+          <Text color="$red10" fontSize={14}>
+            {error}
+          </Text>
+        )}
+        {!loading && !error && !history.length && (
+          <Text color="$gray10" fontSize={14}>
+            Hali tarix mavjud emas
+          </Text>
+        )}
+
+        {history.map((bill) => {
+          const participants = bill.participants ?? [];
+          const summary = `${formatSessionDate(bill.createdAt)} ${BULLET} ${participants.length} ishtirokchi`;
+          const totalAmount = bill.totals?.grandTotal ?? 0;
           return (
             <HistoryCard
-              key={bill.id}
-              title={bill.title}
+              key={bill.sessionId}
+              title={bill.sessionName || 'Hisob'}
               summary={summary}
-              amount={bill.totalAmount}
-              participants={bill.participantsCount}
+              amount={totalAmount}
+              participants={participants}
               onPress={() =>
-                router.push({ pathname: '/tabs/sessions/history/[historyId]', params: { historyId: bill.id } })
+                router.push({
+                  pathname: '/tabs/sessions/history/[historyId]',
+                  params: { historyId: String(bill.sessionId) },
+                })
               }
             />
           );

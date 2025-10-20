@@ -34,8 +34,19 @@
     "error": "Xato",
     "success": "Muvaffaqiyat",
     "cancel": "Bekor qilish",
-    "confirm": "Tasdiqlash", 
+    "confirm": "Tasdiqlash",
     "continue": "Davom etish",
     "back": "Orqaga"
+  },
+  "settings": {
+    "language": {
+      "title": "Til",
+      "description": "Ilovada qaysi til ishlatilishini tanlang.",
+      "options": {
+        "en": "Ingliz tili",
+        "ja": "Yapon tili",
+        "uz": "O'zbek tili"
+      }
+    }
   }
 }

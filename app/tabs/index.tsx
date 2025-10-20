@@ -1,14 +1,33 @@
 // app/tabs/index.tsx
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { YStack, XStack, Text, View, Circle } from 'tamagui';
 import { ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
 
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
-import { BILL_HISTORY } from '@/features/sessions/mock/history';
+import UserAvatar from '@/shared/ui/UserAvatar';
+import type {
+  SessionHistoryParticipant,
+  SessionHistorySession,
+} from '@/features/sessions/api/history.api';
+import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
+import { Button } from '@/shared/ui/Button';
 
 const BULLET = '\u2022';
+const HOME_HISTORY_LIMIT = 10;
+
+const formatSessionDate = (value?: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('uz-UZ', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 function ActionButton({
   title,
@@ -41,22 +60,21 @@ function ActionButton({
   );
 }
 
-function AvatarStack({ count }: { count: number }) {
-  const shown = Math.min(3, count);
-  const extra = Math.max(0, count - shown);
+function AvatarStack({ participants }: { participants: SessionHistoryParticipant[] }) {
+  const shown = participants.slice(0, 3);
+  const extra = Math.max(0, participants.length - shown.length);
   return (
     <XStack w={92} h={28} ai="center">
-      {Array.from({ length: shown }).map((_, i) => (
-        <View
-          key={i}
-          w={28}
-          h={28}
-          br={14}
-          backgroundColor="$gray5"
-          borderWidth={2}
-          borderColor="white"
-          ml={i === 0 ? 0 : -8}
-        />
+      {shown.map((participant, i) => (
+        <View key={participant.uniqueId ?? i} ml={i === 0 ? 0 : -8}>
+          <UserAvatar
+            uri={participant.avatarUrl ?? undefined}
+            label={(participant.username || 'U').slice(0, 1).toUpperCase()}
+            size={28}
+            textSize={12}
+            backgroundColor="$gray5"
+          />
+        </View>
       ))}
       {extra > 0 && (
         <View
@@ -66,7 +84,7 @@ function AvatarStack({ count }: { count: number }) {
           backgroundColor="$gray3"
           borderWidth={2}
           borderColor="white"
-          ml={shown === 0 ? 0 : -8}
+          ml={shown.length === 0 ? 0 : -8}
           ai="center"
           jc="center"
         >
@@ -89,7 +107,7 @@ function BillCard({
   title: string;
   sub: string;
   amount: number;
-  participants: number;
+  participants: SessionHistoryParticipant[];
   onPress?: () => void;
 }) {
   return (
@@ -124,7 +142,7 @@ function BillCard({
         </XStack>
 
         <XStack mt="auto" ai="center">
-          <AvatarStack count={participants} />
+          <AvatarStack participants={participants} />
         </XStack>
       </YStack>
     </Pressable>
@@ -133,6 +151,20 @@ function BillCard({
 
 export default function HomePage() {
   const router = useRouter();
+  const sessions = useSessionsHistoryStore(state => state.sessions);
+  const loading = useSessionsHistoryStore(state => state.loading);
+  const initialized = useSessionsHistoryStore(state => state.initialized);
+  const currentLimit = useSessionsHistoryStore(state => state.limit);
+  const error = useSessionsHistoryStore(state => state.error);
+  const fetchHistory = useSessionsHistoryStore(state => state.fetchHistory);
+  const openSettings = () => router.push('/tabs/settings');
+
+  useEffect(() => {
+    if (loading) return;
+    if (!initialized || (currentLimit ?? 0) < HOME_HISTORY_LIMIT) {
+      fetchHistory(HOME_HISTORY_LIMIT).catch(() => {});
+    }
+  }, [initialized, loading, currentLimit, fetchHistory]);
 
   const openFriends = () => {
     router.push('/tabs/friends');
@@ -146,7 +178,7 @@ export default function HomePage() {
     router.push('/tabs/scan-receipt');
   };
 
-  const recent = BILL_HISTORY.slice(0, 3);
+  const recent = useMemo<SessionHistorySession[]>(() => sessions.slice(0, 3), [sessions]);
 
   return (
     <ScreenContainer>
@@ -177,17 +209,37 @@ export default function HomePage() {
         </XStack>
 
         <YStack gap="$3" pb="$6">
+          {loading && (
+            <Text color="$gray10" fontSize={14}>
+              Yuklanmoqda...
+            </Text>
+          )}
+          {error && (
+            <Text color="$red10" fontSize={14}>
+              {error}
+            </Text>
+          )}
+          {!loading && !error && !recent.length && (
+            <Text color="$gray10" fontSize={14}>
+              Hali hisoblar mavjud emas
+            </Text>
+          )}
           {recent.map((bill) => {
-            const summary = `${bill.date} ${BULLET} ${bill.participantsCount} ishtirokchi`;
+            const participants = bill.participants ?? [];
+            const summary = `${formatSessionDate(bill.createdAt)} ${BULLET} ${participants.length} ishtirokchi`;
+            const totalAmount = bill.totals?.grandTotal ?? 0;
             return (
               <BillCard
-                key={bill.id}
-                title={bill.title}
+                key={bill.sessionId}
+                title={bill.sessionName || 'Hisob'}
                 sub={summary}
-                amount={bill.totalAmount}
-                participants={bill.participantsCount}
+                amount={totalAmount}
+                participants={participants}
                 onPress={() =>
-                  router.push({ pathname: '/tabs/sessions/history/[historyId]', params: { historyId: bill.id } })
+                  router.push({
+                    pathname: '/tabs/sessions/history/[historyId]',
+                    params: { historyId: String(bill.sessionId) },
+                  })
                 }
               />
             );

@@ -115,6 +115,9 @@ const toStoreItems = (source: Item[]): ReceiptSplitItem[] =>
       return acc;
     }, {});
 
+    // Ensure assignedTo is not empty for equal mode
+    const assignedTo = mode === 'equal' ? [...(item.assignedTo || [])] : [];
+
     return {
       id: item.id,
       name: item.name,
@@ -123,7 +126,7 @@ const toStoreItems = (source: Item[]): ReceiptSplitItem[] =>
       totalPrice: typeof item.totalPrice === 'number' ? item.totalPrice : item.price * item.quantity,
       kind: item.kind,
       splitMode: mode,
-      assignedTo: mode === 'equal' ? [...item.assignedTo] : [],
+      assignedTo,
       perPersonCount: mode === 'count' ? perPersonCount : {},
     };
   });
@@ -171,7 +174,10 @@ const buildLocalFinalization = (items: Item[], participants: Participant[]) => {
 
     const assigned = (item.assignedTo ?? []).filter(Boolean);
     const shareCount = assigned.length;
-    if (shareCount === 0) continue;
+      if (shareCount === 0) {
+      console.warn(`Item ${item.id} (${item.name}) has equal split mode but no assigned participants`);
+    continue;
+    } 
 
     const shareAmount = total / shareCount;
     const shareRatio = 1 / shareCount;
@@ -529,27 +535,33 @@ export default function ItemsSplitScreen() {
   }
 
   async function modalSave() {
-    if (!editing) return;
-    const mode = effectiveMode;
-    setSaving(true);
+  if (!editing) return;
+  const mode: Exclude<SplitMode, undefined> =
+    editing.splitMode ?? ((editingItem?.quantity && editingItem.quantity > 1) ? 'count' : 'equal');
 
-    try {
-      commitItems((prev) =>
-        prev.map((it) => {
-          if (it.id !== editing.id) return it;
-          return {
-            ...it,
-            splitMode: mode,
-            assignedTo: mode === 'equal' ? [...editing.assignedTo] : [],
-            perPersonCount: mode === 'count' ? { ...editing.perPersonCount } : {},
-          };
-        })
-      );
-      setEditing(null);
-    } finally {
-      setSaving(false);
-    }
+  setSaving(true);
+  try {
+    commitItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== editing.id) return it;
+        
+        // Ensure we preserve the assignments correctly
+        const assignedTo = mode === 'equal' ? [...(editing.assignedTo || [])] : [];
+        const perPersonCount = mode === 'count' ? { ...(editing.perPersonCount || {}) } : {};
+        
+        return {
+          ...it,
+          splitMode: mode,
+          assignedTo,
+          perPersonCount,
+        };
+      })
+    );
+    setEditing(null);
+  } finally {
+    setSaving(false);
   }
+}
 
   // --- finalize and navigate ---
   const onContinue = useCallback(async () => {
@@ -562,19 +574,30 @@ export default function ItemsSplitScreen() {
       setStoreItems(toStoreItems(items));
 
       const finalizeItems: FinalizeReceiptItemPayload[] = items.map((item) => {
-        const mode = ensureMode(item);
+  const mode = ensureMode(item);
 
-        return {
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          kind: item.kind,
-          splitMode: mode,
-          assignedTo: mode === 'equal' ? item.assignedTo : undefined,
-          perPersonCount: mode === 'count' ? item.perPersonCount : undefined,
-        };
-      });
+  const payload: FinalizeReceiptItemPayload = {
+    id: item.id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity,
+    kind: item.kind,
+    splitMode: mode,
+    assignedTo: mode === 'equal' ? (item.assignedTo || []) : undefined,
+    perPersonCount: mode === 'count' ? (item.perPersonCount || {}) : undefined,
+  };
+
+  // Debug log
+  console.log('Finalizing item:', {
+    id: item.id,
+    name: item.name,
+    mode,
+    assignedTo: payload.assignedTo,
+    perPersonCount: payload.perPersonCount,
+  });
+
+  return payload;
+});
 
       const effectiveSessionId =
         session?.sessionId ??
@@ -622,18 +645,17 @@ export default function ItemsSplitScreen() {
           : fallbackFinalization.grandTotal;
 
       const finishPayload = {
-        sessionId: result.sessionId,
-        sessionName: result.sessionName,
-        receiptId: sessionReceiptId ?? (isMockSession ? 'mock-001' : undefined),
-        participants,
-        totals: totalsFromResponse,
-        totalsByParticipant: effectiveByParticipant,
-        grandTotal,
-        totalsByItem,
-        allocations,
-        status: result.status,
-        createdAt: result.createdAt,
-      };
+  sessionId: result.sessionId,
+  sessionName: result.sessionName,
+  receiptId: sessionReceiptId ?? (isMockSession ? 'mock-001' : undefined),
+  participants,
+  totalsByParticipant: effectiveByParticipant,
+  totalsByItem,
+  allocations,
+  grandTotal,
+  status: result.status,
+  createdAt: result.createdAt,
+};
 
       setShowSuccess(true);
 

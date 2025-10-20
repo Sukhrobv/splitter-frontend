@@ -1,38 +1,31 @@
 // app/index.tsx - улучшенная Welcome страница
-import React, { useState } from 'react';
+import React from 'react';
 import { Redirect, Link } from 'expo-router';
 import { YStack, XStack, Text, Circle } from 'tamagui';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/shared/lib/stores/app-store';
+import { LANGUAGE_OPTIONS, type LanguageCode } from '@/shared/config/languages';
 import { Button } from '@/shared/ui/Button';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import { ScanLine } from '@tamagui/lucide-icons';
 
-type Language = 'en' | 'ja' | 'uz';
-
-interface LanguageOption {
-  code: Language;
-  name: string;
-  flag: string;
-}
-
-const languages: LanguageOption[] = [
-  { code: 'en', name: 'EN', flag: '🇺🇸' },
-  { code: 'ja', name: '日本', flag: '🇯🇵' },
-  { code: 'uz', name: 'UZ', flag: '🇺🇿' },
-];
+const languages = LANGUAGE_OPTIONS.map((option) => ({
+  code: option.code,
+  name: option.shortLabel,
+}));
 
 export default function Welcome() {
-  const token = useAppStore(s => s.token);
-  const { t, i18n } = useTranslation();
-  const [selectedLang, setSelectedLang] = useState<Language>(i18n.language as Language);
+  const token = useAppStore((state) => state.token);
+  const { t } = useTranslation();
+  const currentLanguage = useAppStore((state) => state.language);
+  const setLanguage = useAppStore((state) => state.setLanguage);
 
   // Если уже залогинен — сразу в табы
   if (token) return <Redirect href="/tabs" />;
 
-  const changeLanguage = (langCode: Language) => {
-    setSelectedLang(langCode);
-    i18n.changeLanguage(langCode);
+  const changeLanguage = (langCode: LanguageCode) => {
+    if (langCode === currentLanguage) return;
+    setLanguage(langCode);
   };
 
   return (
@@ -45,7 +38,7 @@ export default function Welcome() {
             {languages.map((lang) => (
               <YStack
                 key={lang.code}
-                backgroundColor={selectedLang === lang.code ? "#2ECC71" : "transparent"}
+                backgroundColor={currentLanguage === lang.code ? "#2ECC71" : "transparent"}
                 borderRadius="$6"
                 paddingHorizontal="$3"
                 paddingVertical="$2"
@@ -55,7 +48,7 @@ export default function Welcome() {
                 <Text 
                   fontSize="$2" 
                   fontWeight="600"
-                  color={selectedLang === lang.code ? "#FFFFFF" : "$gray11"}
+                  color={currentLanguage === lang.code ? "#FFFFFF" : "$gray11"}
                 >
                   {lang.name}
                 </Text>
@@ -160,3 +153,5 @@ export default function Welcome() {
     </ScreenContainer>
   );
 }
+
+

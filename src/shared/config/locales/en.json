@@ -55,5 +55,16 @@
     "remove": "Remove",
     "loading": "Loading...",
     "error": "Failed to load"
+  },
+  "settings": {
+    "language": {
+      "title": "Language",
+      "description": "Choose the language used across the app.",
+      "options": {
+        "en": "English",
+        "ja": "Japanese",
+        "uz": "Uzbek"
+      }
+    }
   }
 }

@@ -68,44 +68,192 @@ export default function FinishScreen() {
   const receiptId = payload?.receiptId;
 
   const { participantSummaries, itemSummaries, effectiveGrandTotal } = useMemo(() => {
+    type RawParticipantTotal = FinalizeTotalsByParticipant & {
+      participantId?: string;
+      userId?: string;
+      id?: string | number;
+      amount?: number;
+      total?: number;
+      shareAmount?: number;
+      balance?: number;
+      value?: number;
+      owed?: number;
+      participantName?: string;
+      displayName?: string;
+      participant?: {
+        id?: string | number;
+        uniqueId?: string;
+        userId?: string;
+        username?: string;
+        name?: string;
+        displayName?: string;
+      };
+      user?: {
+        id?: string | number;
+        uniqueId?: string;
+        username?: string;
+        name?: string;
+      };
+      amountDetails?: {
+        value?: number;
+        total?: number;
+      };
+      totals?: {
+        amount?: number;
+        total?: number;
+      };
+      meta?: {
+        amount?: number;
+      };
+    };
+
+    const normalizeId = (value?: string | null): string | undefined => {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value);
+      }
+      if (typeof value !== 'string') return undefined;
+      const trimmed = value.trim();
+      if (trimmed.length === 0) return undefined;
+      if (trimmed === 'undefined' || trimmed === 'null') return undefined;
+      return trimmed;
+    };
+
+    const toMaybeNumber = (value: unknown): number | undefined => {
+      if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : undefined;
+      }
+      if (typeof value === 'string') {
+        const trimmed = value.trim().replace(/\s+/g, '');
+        if (trimmed.length === 0) return undefined;
+        const parsed = Number(trimmed);
+        return Number.isFinite(parsed) ? parsed : undefined;
+      }
+      return undefined;
+    };
+
+    const pickFromArray = <T,>(value: unknown, index: number): T | undefined => {
+      if (!Array.isArray(value)) return undefined;
+      return value[index] as T | undefined;
+    };
+
+    const totalsEntries = Object.entries(totals ?? {}).reduce<Array<[string, number]>>(
+      (acc, [rawId, value]) => {
+        const id = normalizeId(rawId);
+        if (!id) return acc;
+        if (typeof value !== 'number' || !Number.isFinite(value)) return acc;
+        acc.push([id, value]);
+        return acc;
+      },
+      []
+    );
+    const totalsMap = new Map<string, number>(totalsEntries);
+
+    const normalizedParticipantTotals = (totalsByParticipantList as unknown[]).reduce<
+      Array<{ uniqueId: string; username: string; amountOwed: number }>
+    >((acc, rawEntry) => {
+      const raw = rawEntry as RawParticipantTotal;
+      if (!raw) return acc;
+      const candidate = raw as RawParticipantTotal;
+
+      const candidateId =
+        normalizeId(candidate.uniqueId) ??
+        normalizeId(candidate.participantId) ??
+        normalizeId(candidate.userId) ??
+        normalizeId(
+          typeof candidate.id === 'number' ? String(candidate.id) : (candidate.id as string | undefined)
+        ) ??
+        normalizeId(candidate.participant?.uniqueId) ??
+        normalizeId(
+          typeof candidate.participant?.id === 'number'
+            ? String(candidate.participant?.id)
+            : (candidate.participant?.id as string | undefined)
+        ) ??
+        normalizeId(candidate.participant?.userId) ??
+        normalizeId(candidate.user?.uniqueId) ??
+        normalizeId(
+          typeof candidate.user?.id === 'number'
+            ? String(candidate.user?.id)
+            : (candidate.user?.id as string | undefined)
+        ) ??
+        normalizeId(candidate.user?.name) ??
+        normalizeId(pickFromArray<string>(rawEntry, 0));
+
+      const rawId = candidateId;
+      if (!rawId) return acc;
+
+      const username =
+        candidate.username ??
+        candidate.participant?.username ??
+        candidate.participant?.name ??
+        candidate.participantName ??
+        candidate.displayName ??
+        candidate.user?.username ??
+        candidate.user?.name ??
+        participants.find(
+          (participant) => normalizeId(participant.uniqueId) === rawId
+        )?.username ??
+        rawId;
+
+      const amount = pickFirstNumber(
+        toMaybeNumber(candidate.amountOwed),
+        toMaybeNumber(candidate.amount),
+        toMaybeNumber(candidate.total),
+        toMaybeNumber(candidate.shareAmount),
+        toMaybeNumber(candidate.balance),
+        toMaybeNumber(candidate.value),
+        toMaybeNumber(candidate.owed),
+        toMaybeNumber(candidate.amountDetails?.value),
+        toMaybeNumber(candidate.amountDetails?.total),
+        toMaybeNumber(candidate.totals?.amount),
+        toMaybeNumber(candidate.totals?.total),
+        toMaybeNumber(candidate.meta?.amount),
+        toMaybeNumber(pickFromArray(rawEntry, 1))
+      );
+
+      acc.push({ uniqueId: rawId, username, amountOwed: amount });
+      return acc;
+    }, []);
+
     const totalsFromList = new Map<string, number>();
     const nameMap = new Map<string, string>();
 
-    const pushName = (id?: string, username?: string) => {
-      if (!id || !username) return;
+    const pushName = (value?: string, username?: string) => {
+      const id = normalizeId(value);
+      if (!id) return;
+      const safeName = (username ?? '').trim() || id;
       if (!nameMap.has(id)) {
-        nameMap.set(id, username);
+        nameMap.set(id, safeName);
       }
     };
 
-    participants.forEach((participant) => pushName(participant.uniqueId, participant.username));
-    totalsByParticipantList.forEach((entry) => {
+    participants.forEach((participant) =>
+      pushName(participant.uniqueId, participant.username)
+    );
+    normalizedParticipantTotals.forEach((entry) => {
       pushName(entry.uniqueId, entry.username);
       totalsFromList.set(entry.uniqueId, entry.amountOwed);
     });
-
-    Object.keys(totals).forEach((id) => {
-      if (!nameMap.has(id)) {
-        const candidate =
-          totalsByParticipantList.find((entry) => entry.uniqueId === id)?.username ??
-          participants.find((participant) => participant.uniqueId === id)?.username;
-        if (candidate) {
-          nameMap.set(id, candidate);
-        }
-      }
+    totalsEntries.forEach(([id]) => {
+      const candidateName =
+        normalizedParticipantTotals.find((entry) => entry.uniqueId === id)?.username ??
+        participants.find(
+          (participant) => normalizeId(participant.uniqueId) === id
+        )?.username;
+      pushName(id, candidateName);
     });
 
     const participantOrder: string[] = [];
     const seenParticipants = new Set<string>();
-    const pushParticipant = (id?: string) => {
+    const pushParticipant = (value?: string) => {
+      const id = normalizeId(value);
       if (!id || seenParticipants.has(id)) return;
       seenParticipants.add(id);
       participantOrder.push(id);
     };
 
     participants.forEach((participant) => pushParticipant(participant.uniqueId));
-    totalsByParticipantList.forEach((entry) => pushParticipant(entry.uniqueId));
-    Object.keys(totals).forEach((id) => pushParticipant(id));
+    normalizedParticipantTotals.forEach((entry) => pushParticipant(entry.uniqueId));
+    totalsEntries.forEach(([id]) => pushParticipant(id));
 
     const allocationsByItem = new Map<
       string,
@@ -113,11 +261,15 @@ export default function FinishScreen() {
     >();
     const allocationTotalsByParticipant = new Map<string, number>();
 
-    const ensureName = (id: string) => {
+    const ensureName = (value: string) => {
+      const id = normalizeId(value);
+      if (!id) return value;
       if (!nameMap.has(id)) {
         const fallback =
-          totalsByParticipantList.find((entry) => entry.uniqueId === id)?.username ??
-          participants.find((participant) => participant.uniqueId === id)?.username ??
+          normalizedParticipantTotals.find((entry) => entry.uniqueId === id)?.username ??
+          participants.find(
+            (participant) => normalizeId(participant.uniqueId) === id
+          )?.username ??
           id;
         nameMap.set(id, fallback);
       }
@@ -129,12 +281,15 @@ export default function FinishScreen() {
       const { participantId, itemId, shareAmount } = allocation;
       if (!participantId || !itemId || typeof shareAmount !== 'number') return;
 
-      pushParticipant(participantId);
-      const username = ensureName(participantId);
+      const normalizedParticipantId = normalizeId(participantId);
+      if (!normalizedParticipantId) return;
+
+      pushParticipant(normalizedParticipantId);
+      const username = ensureName(normalizedParticipantId);
 
       allocationTotalsByParticipant.set(
-        participantId,
-        (allocationTotalsByParticipant.get(participantId) ?? 0) + shareAmount
+        normalizedParticipantId,
+        (allocationTotalsByParticipant.get(normalizedParticipantId) ?? 0) + shareAmount
       );
 
       const itemEntry =
@@ -143,12 +298,12 @@ export default function FinishScreen() {
 
       itemEntry.total += shareAmount;
 
-      const existing = itemEntry.allocations.get(participantId);
+      const existing = itemEntry.allocations.get(normalizedParticipantId);
       if (existing) {
         existing.amount += shareAmount;
       } else {
-        itemEntry.allocations.set(participantId, {
-          uniqueId: participantId,
+        itemEntry.allocations.set(normalizedParticipantId, {
+          uniqueId: normalizedParticipantId,
           username,
           amount: shareAmount,
         });
@@ -157,14 +312,16 @@ export default function FinishScreen() {
       allocationsByItem.set(itemId, itemEntry);
     });
 
-    const resolveAmount = (id: string) => {
-      if (typeof totals[id] === 'number') return totals[id];
+    const resolveAmount = (value: string) => {
+      const id = normalizeId(value);
+      if (!id) return 0;
+      if (totalsMap.has(id)) return totalsMap.get(id)!;
       if (totalsFromList.has(id)) return totalsFromList.get(id)!;
       if (allocationTotalsByParticipant.has(id)) return allocationTotalsByParticipant.get(id)!;
       return 0;
     };
 
-    const resolveName = (id: string) => ensureName(id);
+    const resolveName = (value: string) => ensureName(value);
 
     const summaries: ParticipantAmount[] = participantOrder.map((id) => ({
       uniqueId: id,
@@ -183,7 +340,7 @@ export default function FinishScreen() {
       }
     });
 
-    Object.keys(totals).forEach((id) => {
+    totalsEntries.forEach(([id]) => {
       if (!seenParticipants.has(id)) {
         seenParticipants.add(id);
         summaries.push({

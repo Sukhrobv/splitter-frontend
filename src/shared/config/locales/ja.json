@@ -37,5 +37,16 @@
     "confirm": "確認",
     "continue": "続行",
     "back": "戻る"
+  },
+  "settings": {
+    "language": {
+      "title": "Language",
+      "description": "Choose the language used across the app.",
+      "options": {
+        "en": "English",
+        "ja": "Japanese",
+        "uz": "Uzbek"
+      }
+    }
   }
 }

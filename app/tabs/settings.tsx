@@ -1,16 +1,21 @@
+// app/tabs/settings.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { YStack, Text, Button, Separator, XStack } from 'tamagui';
+import { YStack, Text, Separator, XStack } from 'tamagui';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/shared/ui/Button';
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import Input from '@/shared/ui/Input';
 import PasswordInput from '@/shared/ui/PasswordInput';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 import { changePassword, updateUsername } from '@/features/auth/api';
+import { LANGUAGE_OPTIONS, type LanguageCode } from '@/shared/config/languages';
 
 export default function SettingsScreen() {
-  const { user, setUser } = useAppStore();
+  const { user, setUser, language, setLanguage } = useAppStore();
+  const { t } = useTranslation();
   const isLoggedIn = !!user;
 
   const [usernameValue, setUsernameValue] = useState(user?.username ?? '');
@@ -54,12 +59,16 @@ export default function SettingsScreen() {
     return null;
   };
 
+  const handleLanguageChange = (code: LanguageCode) => {
+    if (code === language) return;
+    setLanguage(code);
+  };
+
   const handleSaveUsername = async () => {
     if (!isLoggedIn) {
       Alert.alert('Unavailable', 'Sign in to update your username.');
       return;
     }
-
     const error = validateUsername(usernameValue);
     if (error) {
       setUsernameError(error);
@@ -138,8 +147,9 @@ export default function SettingsScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <ScreenContainer>
-            <YStack gap="$5">
-              <YStack gap="$3" mt="$4">
+            <YStack space="$5">
+              {/* Header */}
+              <YStack space="$3" mt="$4">
                 <Text fontSize={20} fontWeight="700">
                   Account settings
                 </Text>
@@ -148,7 +158,45 @@ export default function SettingsScreen() {
                 </Text>
               </YStack>
 
-              <YStack gap="$3">
+              {/* LANGUAGE */}
+              <YStack space="$3">
+                <Text fontSize={16} fontWeight="600">
+                  {t('settings.language.title', 'Language')}
+                </Text>
+                <Text fontSize={14} color="$gray10">
+                  {t('settings.language.description', 'Choose the language used across the app.')}
+                </Text>
+
+                <XStack
+                  space="$2"
+                  backgroundColor="$gray3"
+                  borderRadius="$8"
+                  padding="$1"
+                  flexWrap="wrap"
+                >
+                  {LANGUAGE_OPTIONS.map((option) => {
+                    const isActive = option.code === language;
+                    const label = t(
+                      `settings.language.options.${option.code}`,
+                      option.shortLabel
+                    );
+                    return (
+                      <Button
+                        key={option.code}
+                        title={label}
+                        variant={isActive ? 'primary' : 'outline'}
+                        size="small"
+                        onPress={() => handleLanguageChange(option.code)}
+                      />
+                    );
+                  })}
+                </XStack>
+              </YStack>
+
+              <Separator />
+
+              {/* USERNAME */}
+              <YStack space="$3">
                 <Text fontSize={16} fontWeight="600">Username</Text>
                 <Input
                   value={usernameValue}
@@ -157,31 +205,28 @@ export default function SettingsScreen() {
                   textInputProps={{ autoCapitalize: 'none', autoCorrect: false }}
                   error={usernameError || undefined}
                 />
-                <XStack gap="$2">
+                <XStack space="$2">
                   <Button
-                    flex={1}
-                    size="$3"
-                    bg="$green9"
-                    color="white"
+                    title={isUpdatingUsername ? 'Saving...' : 'Save username'}
+                    variant="primary"
+                    size="medium"
                     disabled={!usernameDirty || isUpdatingUsername}
                     onPress={handleSaveUsername}
-                  >
-                    {isUpdatingUsername ? 'Saving...' : 'Save username'}
-                  </Button>
+                  />
                   <Button
-                    size="$3"
-                    variant="outlined"
+                    title="Reset"
+                    variant="outline"
+                    size="medium"
                     disabled={!usernameDirty}
                     onPress={() => setUsernameValue(user?.username ?? '')}
-                  >
-                    Reset
-                  </Button>
+                  />
                 </XStack>
               </YStack>
 
               <Separator />
 
-              <YStack gap="$3">
+              {/* PASSWORD */}
+              <YStack space="$3">
                 <Text fontSize={16} fontWeight="600">Password</Text>
                 <PasswordInput
                   value={currentPassword}
@@ -206,14 +251,12 @@ export default function SettingsScreen() {
                   textInputProps={{ returnKeyType: 'done' }}
                 />
                 <Button
-                  size="$3"
-                  bg="$green9"
-                  color="white"
+                  title={isChangingPassword ? 'Updating...' : 'Change password'}
+                  variant="primary"
+                  size="medium"
                   disabled={isChangingPassword}
                   onPress={handleChangePassword}
-                >
-                  {isChangingPassword ? 'Updating...' : 'Change password'}
-                </Button>
+                />
               </YStack>
             </YStack>
           </ScreenContainer>
@@ -222,4 +265,3 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
-
