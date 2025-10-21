@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, RefreshControl } from 'react-native';
 import { YStack, XStack, Text, ScrollView, View } from 'tamagui';
 
 import UserAvatar from '@/shared/ui/UserAvatar';
-import type { SessionHistoryParticipant } from '@/features/sessions/api/history.api';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
+import type { SessionHistoryEntry, SessionHistoryParticipantLight } from '@/features/sessions/api/history.api';
 
 const BULLET = '\u2022';
 const HISTORY_LIMIT = 50;
@@ -22,7 +22,7 @@ const formatSessionDate = (value?: string) => {
   });
 };
 
-function AvatarGroup({ participants }: { participants: SessionHistoryParticipant[] }) {
+function AvatarGroup({ participants }: { participants: SessionHistoryParticipantLight[] }) {
   const shown = participants.slice(0, 4);
   const extra = Math.max(0, participants.length - shown.length);
   return (
@@ -67,7 +67,7 @@ function HistoryCard({
   title: string;
   summary: string;
   amount: number;
-  participants: SessionHistoryParticipant[];
+  participants: SessionHistoryParticipantLight[];
   onPress: () => void;
 }) {
   return (
@@ -113,21 +113,39 @@ export default function SessionsHistoryScreen() {
   const currentLimit = useSessionsHistoryStore(state => state.limit);
   const error = useSessionsHistoryStore(state => state.error);
   const fetchHistory = useSessionsHistoryStore(state => state.fetchHistory);
+  const refreshIfStale = useSessionsHistoryStore(state => state.refreshIfStale);
+
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (loading) return;
     if (!initialized || (currentLimit ?? 0) < HISTORY_LIMIT) {
       fetchHistory(HISTORY_LIMIT).catch(() => {});
+    } else {
+      // если уже инициализировано — подёргаем обновление по давности
+      refreshIfStale(15_000, HISTORY_LIMIT).catch(() => {});
     }
-  }, [initialized, loading, currentLimit, fetchHistory]);
+  }, [initialized, loading, currentLimit, fetchHistory, refreshIfStale]);
 
-  const history = useMemo(() => sessions, [sessions]);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchHistory(HISTORY_LIMIT);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchHistory]);
+
+  const history = useMemo<SessionHistoryEntry[]>(() => sessions, [sessions]);
 
   return (
     <YStack f={1} bg="$background" px="$4" pt="$4">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ alignItems: 'center', paddingBottom: 32, gap: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <YStack w={358} gap="$1" mb="$2">
           <Text fontSize={24} fontWeight="700">Oxirgi hisoblar</Text>
@@ -152,8 +170,9 @@ export default function SessionsHistoryScreen() {
 
         {history.map((bill) => {
           const participants = bill.participants ?? [];
-          const summary = `${formatSessionDate(bill.createdAt)} ${BULLET} ${participants.length} ishtirokchi`;
-          const totalAmount = bill.totals?.grandTotal ?? 0;
+          const dateForSummary = bill.finalizedAt || bill.createdAt;
+          const summary = `${formatSessionDate(dateForSummary)} ${BULLET} ${participants.length} ishtirokchi`;
+          const totalAmount = bill.grandTotal ?? 0;
           return (
             <HistoryCard
               key={bill.sessionId}

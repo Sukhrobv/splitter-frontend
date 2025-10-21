@@ -1,17 +1,14 @@
-// app/tabs/index.tsx
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { YStack, XStack, Text, View, Circle } from 'tamagui';
-import { Calculator, ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
+import { ScanLine, Users, UserPlus, RefreshCw } from '@tamagui/lucide-icons';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import UserAvatar from '@/shared/ui/UserAvatar';
-import type {
-  SessionHistoryParticipant,
-  SessionHistorySession,
-} from '@/features/sessions/api/history.api';
+import type { SessionHistoryEntry } from '@/features/sessions/api/history.api';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
 
 const HOME_HISTORY_LIMIT = 10;
@@ -65,16 +62,17 @@ function ActionButton({
   );
 }
 
-function AvatarStack({ participants }: { participants: SessionHistoryParticipant[] }) {
-  const shown = participants.slice(0, 3);
-  const extra = Math.max(0, participants.length - shown.length);
+function AvatarStack({ participantIds }: { participantIds: string[] }) {
+  const shown = participantIds.slice(0, 3);
+  const extra = Math.max(0, participantIds.length - shown.length);
+
   return (
     <XStack w={92} h={28} ai="center">
-      {shown.map((participant, i) => (
-        <View key={participant.uniqueId ?? i} ml={i === 0 ? 0 : -8}>
+      {shown.map((uniqueId, i) => (
+        <View key={uniqueId ?? i} ml={i === 0 ? 0 : -8}>
           <UserAvatar
-            uri={participant.avatarUrl ?? undefined}
-            label={(participant.username || 'U').slice(0, 1).toUpperCase()}
+            uri={undefined}
+            label={(uniqueId || 'U').slice(0, 2).toUpperCase()}
             size={28}
             textSize={12}
             backgroundColor="$gray5"
@@ -106,13 +104,13 @@ function BillCard({
   title,
   sub,
   amountLabel,
-  participants,
+  participantIds,
   onPress,
 }: {
   title: string;
   sub: string;
   amountLabel: string;
-  participants: SessionHistoryParticipant[];
+  participantIds: string[];
   onPress?: () => void;
 }) {
   return (
@@ -147,7 +145,7 @@ function BillCard({
         </XStack>
 
         <XStack mt="auto" ai="center">
-          <AvatarStack participants={participants} />
+          <AvatarStack participantIds={participantIds} />
         </XStack>
       </YStack>
     </Pressable>
@@ -163,28 +161,39 @@ export default function HomePage() {
   const currentLimit = useSessionsHistoryStore(state => state.limit);
   const error = useSessionsHistoryStore(state => state.error);
   const fetchHistory = useSessionsHistoryStore(state => state.fetchHistory);
-  const openSettings = () => router.push('/tabs/settings');
+  const refreshIfStale = useSessionsHistoryStore(state => state.refreshIfStale);
+  const forceRefresh = useSessionsHistoryStore(state => state.forceRefresh);
+
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
     if (loading) return;
+    if (hasFetchedRef.current) return;
     if (!initialized || (currentLimit ?? 0) < HOME_HISTORY_LIMIT) {
-      fetchHistory(HOME_HISTORY_LIMIT).catch(() => {});
+      hasFetchedRef.current = true;
+      fetchHistory(HOME_HISTORY_LIMIT).catch(() => {
+        hasFetchedRef.current = false;
+      });
     }
-  }, [initialized, loading, currentLimit, fetchHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized, loading, currentLimit]);
 
-  const openFriends = () => {
-    router.push('/tabs/friends');
-  };
+  useFocusEffect(
+    useCallback(() => {
+      refreshIfStale(15_000, HOME_HISTORY_LIMIT).catch(() => {});
+    }, [refreshIfStale])
+  );
 
-  const openGroups = () => {
-    router.push('/tabs/groups');
-  };
+  const onManualRefresh = useCallback(() => {
+    forceRefresh(HOME_HISTORY_LIMIT).catch(() => {});
+  }, [forceRefresh]);
 
-  const onScan = () => {
-    router.push('/tabs/scan-receipt');
-  };
+  const openFriends = () => router.push('/tabs/friends');
+  const openGroups = () => router.push('/tabs/groups');
+  const onScan = () => router.push('/tabs/scan-receipt');
+  const openAllSessions = () => router.push('/tabs/sessions/history');
 
-  const recent = useMemo<SessionHistorySession[]>(() => sessions.slice(0, 3), [sessions]);
+  const recent = useMemo<SessionHistoryEntry[]>(() => sessions.slice(0, 3), [sessions]);
 
   return (
     <ScreenContainer>
@@ -217,9 +226,25 @@ export default function HomePage() {
           <Text fontSize={18} fontWeight="600">
             {t('home.recent.title', 'Recent bills')}
           </Text>
-          <Pressable onPress={() => router.push('/tabs/sessions/history')}>
-            <Text color="#2ECC71">{t('home.recent.showMore', 'Show more')}</Text>
-          </Pressable>
+
+          {/* Справа: только иконка Refresh + кнопка Show more */}
+          <XStack ai="center" gap="$3">
+            <Pressable
+              onPress={onManualRefresh}
+              disabled={loading}
+              accessibilityLabel="Refresh recent bills"
+            >
+              <XStack ai="center" opacity={loading ? 0.6 : 1}>
+                <RefreshCw size={18} />
+              </XStack>
+            </Pressable>
+
+            <Pressable onPress={openAllSessions}>
+              <Text color="#2ECC71">
+                {t('home.recent.showMore', 'Show more')}
+              </Text>
+            </Pressable>
+          </XStack>
         </XStack>
 
         <YStack gap="$3" pb="$6">
@@ -239,30 +264,26 @@ export default function HomePage() {
             </Text>
           )}
           {recent.map((bill) => {
-            const participants = bill.participants ?? [];
+            const participantIds = bill.participantUniqueIds ?? [];
             const participantsLabel = t('home.recent.participants', {
-              count: participants.length,
+              count: participantIds.length,
+              defaultValue: `${participantIds.length} participants`,
             });
-            const summary = t('home.recent.summary', {
-              date: formatSessionDate(bill.createdAt, i18n.language),
-              participants: participantsLabel,
-            });
-            const totalAmount = bill.totals?.grandTotal ?? 0;
-            const currency = bill.currency ?? DEFAULT_CURRENCY;
-            const amountLabel = t('home.recent.amount', {
-              currency,
-              amount: totalAmount.toLocaleString(i18n.language ?? 'en', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              }),
-            });
+            const dateForSummary = bill.finalizedAt || bill.createdAt;
+            const summary = `${formatSessionDate(dateForSummary, i18n.language)} • ${participantsLabel}`;
+            const totalAmount = bill.grandTotal ?? 0;
+            const amountLabel = `${totalAmount.toLocaleString(i18n.language ?? 'en', {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })} ${DEFAULT_CURRENCY}`;
+
             return (
               <BillCard
                 key={bill.sessionId}
                 title={bill.sessionName || t('home.recent.fallbackName', 'Bill')}
                 sub={summary}
                 amountLabel={amountLabel}
-                participants={participants}
+                participantIds={participantIds}
                 onPress={() =>
                   router.push({
                     pathname: '/tabs/sessions/history/[historyId]',

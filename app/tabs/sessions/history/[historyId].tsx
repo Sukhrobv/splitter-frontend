@@ -5,10 +5,10 @@ import { YStack, XStack, Text, ScrollView, Button } from 'tamagui';
 import UserAvatar from '@/shared/ui/UserAvatar';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
 import type {
+  SessionHistoryEntry,
   SessionHistoryAllocation,
   SessionHistoryItem,
-  SessionHistoryParticipant,
-  SessionHistorySession,
+  SessionHistoryParticipantLight,
   SessionHistoryTotalsByParticipant,
 } from '@/features/sessions/api/history.api';
 
@@ -29,7 +29,7 @@ const formatSessionDate = (value?: string) => {
 };
 
 type ParticipantView = {
-  participant: SessionHistoryParticipant;
+  participant: SessionHistoryParticipantLight;
   avatarUrl?: string | null;
   amount: number;
   items: {
@@ -39,7 +39,7 @@ type ParticipantView = {
   }[];
 };
 
-const buildParticipantsView = (bill?: SessionHistorySession): ParticipantView[] => {
+const buildParticipantsView = (bill?: SessionHistoryEntry): ParticipantView[] => {
   if (!bill) return [];
 
   const totalsByParticipant = new Map<string, SessionHistoryTotalsByParticipant>();
@@ -59,20 +59,24 @@ const buildParticipantsView = (bill?: SessionHistorySession): ParticipantView[] 
     allocationsByParticipant.set(alloc.participantId, collection);
   });
 
-  return (bill.participants ?? []).map(participant => {
-    const totals = totalsByParticipant.get(participant.uniqueId);
-    const allocations = allocationsByParticipant.get(participant.uniqueId) ?? [];
+  return (bill.participants ?? []).map(p => {
+    const totals = totalsByParticipant.get(p.uniqueId);
+    const allocations = allocationsByParticipant.get(p.uniqueId) ?? [];
     const items = allocations.map((allocation, index) => {
       const itemMeta = itemsById.get(allocation.itemId);
       return {
-        id: `${allocation.itemId}-${participant.uniqueId}-${index}`,
+        id: `${allocation.itemId}-${p.uniqueId}-${index}`,
         title: itemMeta?.name || 'Tovar',
         price: allocation.shareAmount,
       };
     });
     return {
-      participant,
-      avatarUrl: participant.avatarUrl ?? totals?.avatarUrl ?? null,
+      participant: {
+        uniqueId: p.uniqueId,
+        username: totals?.username || p.username || 'U',
+        avatarUrl: p.avatarUrl ?? null,
+      },
+      avatarUrl: p.avatarUrl ?? null,
       amount: totals?.amountOwed ?? 0,
       items,
     };
@@ -89,7 +93,7 @@ export default function HistoryDetailsScreen() {
   const error = useSessionsHistoryStore(state => state.error);
   const fetchHistory = useSessionsHistoryStore(state => state.fetchHistory);
 
-  const bill: SessionHistorySession | undefined = useMemo(() => {
+  const bill: SessionHistoryEntry | undefined = useMemo(() => {
     if (!historyId) return undefined;
     const id = Number(historyId);
     if (Number.isNaN(id)) return undefined;
@@ -140,10 +144,10 @@ export default function HistoryDetailsScreen() {
             <Text color="#2ECC71">{'< Ortga'}</Text>
           </Button>
           <Text fontSize={14} color="$gray10">
-            {`${formatSessionDate(bill.createdAt)} ${BULLET} ${(bill.participants ?? []).length} ishtirokchi`}
+            {`${formatSessionDate(bill.finalizedAt || bill.createdAt)} ${BULLET} ${(bill.participants ?? []).length} ishtirokchi`}
           </Text>
           <Text fontSize={16} fontWeight="700" color="#2ECC71">
-            {fmtUZS(bill.totals?.grandTotal ?? 0)}
+            {fmtUZS(bill.grandTotal ?? 0)}
           </Text>
         </YStack>
 
@@ -197,4 +201,3 @@ export default function HistoryDetailsScreen() {
     </YStack>
   );
 }
-
