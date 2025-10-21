@@ -1,8 +1,9 @@
 // app/tabs/friends/invite.tsx
 import React, { useEffect, useState } from 'react';
 import { YStack, XStack, Button, Paragraph, Spinner } from 'tamagui';
-import { ChevronLeft, QrCode } from '@tamagui/lucide-icons';
+import { QrCode } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { InviteQR } from '@/shared/ui/InviteQR';
 import { FriendsApi } from '@/features/friends/api/friends.api';
@@ -14,13 +15,14 @@ export default function FriendInviteScreen() {
   const [data, setData] = useState<InviteDTO | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const goBack = () => router.replace('/tabs/friends/requests' as never);
 
   async function refresh() {
     setLoading(true);
     try {
-      const resp = await FriendsApi.createInvite(300); // 5 минут
+      const resp = await FriendsApi.createInvite(300);
       setData({ url: resp.url, expiresAt: resp.expiresAt });
     } finally {
       setLoading(false);
@@ -47,7 +49,7 @@ export default function FriendInviteScreen() {
           </Button> */}
           <XStack ai="center" gap="$2">
             <QrCode size={18} color="$gray12" />
-            <Paragraph fow="700" fos="$6">My Friend QR</Paragraph>
+            <Paragraph fow="700" fos="$6">{t('friends.invite.title', 'My Friend QR')}</Paragraph>
           </XStack>
           <YStack w={54} />{/* spacer */}
         </XStack>
@@ -60,17 +62,17 @@ export default function FriendInviteScreen() {
             <>
               <InviteQR
                 url={data.url}
-                title="Show this QR to your friend"
+                title={t('friends.invite.description', 'Show this QR to your friend')}
                 expiresAt={data.expiresAt}
               />
               <Button onPress={refresh} size="$3" borderRadius="$3">
-                New QR
+                {t('friends.invite.new', 'New QR')}
               </Button>
             </>
           ) : (
             <>
-              <Paragraph>Failed to get invite</Paragraph>
-              <Button onPress={refresh}>Retry</Button>
+              <Paragraph>{t('friends.invite.error', 'Failed to get invite')}</Paragraph>
+              <Button onPress={refresh}>{t('common.retry', 'Retry')}</Button>
               {/* <Button onPress={goBack} variant="outlined">Back</Button> */}
             </>
           )}
@@ -79,3 +81,4 @@ export default function FriendInviteScreen() {
     </ScreenContainer>
   );
 }
+

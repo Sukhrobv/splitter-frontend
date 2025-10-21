@@ -1,7 +1,18 @@
-﻿import { useEffect } from 'react';
-import { YStack, Paragraph, Card, XStack, Spinner, Separator, View, Button } from 'tamagui';
+import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { Scan } from '@tamagui/lucide-icons';
+import {
+  YStack,
+  Paragraph,
+  Card,
+  XStack,
+  Spinner,
+  Separator,
+  View,
+  Button,
+} from 'tamagui';
+
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import type { GroupMember } from '@/features/groups/api/groups.api';
 import UserAvatar from '@/shared/ui/UserAvatar';
@@ -67,22 +78,85 @@ function AvatarStack({
     </XStack>
   );
 }
+
 export default function GroupsListScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { groups, counts, loading, error, fetchGroups } = useGroupsStore();
 
-  useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
 
-  if (loading && groups.length === 0) {
-    return <YStack f={1} ai="center" jc="center"><Spinner /></YStack>;
+  const hasNoGroups = groups.length === 0;
+
+  const cards = useMemo(
+    () =>
+      groups.map((group) => {
+        const members = Array.isArray(group.members) ? group.members : [];
+        const storedCount = counts?.[group.id];
+        const apiCount = typeof group.counts?.members === 'number' ? group.counts.members : undefined;
+        const memberCount =
+          typeof storedCount === 'number'
+            ? storedCount
+            : typeof apiCount === 'number'
+            ? apiCount
+            : members.length;
+
+        const countLabel = t('groups.list.members', { count: memberCount });
+        const groupName = group.name ?? t('groups.common.untitled', 'Group');
+        const emptyMembersLabel = t('groups.list.members_zero', 'No members yet');
+
+        return (
+          <Card
+            key={group.id}
+            pressStyle={{ scale: 0.98 }}
+            onPress={() =>
+              router.push({
+                pathname: '/tabs/groups/[groupId]',
+                params: { groupId: String(group.id) },
+              } as never)
+            }
+            h={62}
+            br={12}
+            bw={1}
+            bc="$gray5"
+            px="$4"
+            ai="center"
+            jc="center"
+          >
+            <XStack w="100%" jc="space-between" ai="center">
+              <YStack>
+                <Paragraph fow="700" fos={16}>
+                  {groupName}
+                </Paragraph>
+                <Paragraph size={12} col="$gray10">
+                  {memberCount === 0 ? emptyMembersLabel : countLabel}
+                </Paragraph>
+              </YStack>
+              <AvatarStack members={members} totalCount={memberCount} />
+            </XStack>
+          </Card>
+        );
+      }),
+    [counts, groups, router, t]
+  );
+
+  if (loading && hasNoGroups) {
+    return (
+      <YStack f={1} ai="center" jc="center">
+        <Spinner />
+      </YStack>
+    );
   }
 
   return (
     <YStack f={1} p="$4" gap="$3" bg="$background">
-      <Paragraph fow="700" fos="$7">Groups</Paragraph>
+      <Paragraph fow="700" fos="$7">
+        {t('groups.title', 'Groups')}
+      </Paragraph>
       <Separator />
 
-      {/* Invite actions for groups: только сканирование на списке */}
       <XStack jc="flex-end" ai="center">
         <Button
           onPress={() =>
@@ -93,55 +167,16 @@ export default function GroupsListScreen() {
           theme="active"
           icon={<Scan size={18} />}
         >
-          Scan invite
+          {t('groups.actions.scanInvite', 'Scan invite')}
         </Button>
       </XStack>
 
       {error && <Paragraph col="$red10">{error}</Paragraph>}
 
-      {groups.length === 0 ? (
-        <Paragraph col="$gray10">No groups yet. Tap + to create.</Paragraph>
+      {hasNoGroups ? (
+        <Paragraph col="$gray10">{t('groups.empty', 'No groups yet. Tap + to create.')}</Paragraph>
       ) : (
-        <YStack gap="$3">
-          {groups.map((g) => {
-            const members = Array.isArray(g.members) ? g.members : [];
-            const storedCount = counts?.[g.id];
-            const apiCount = typeof g.counts?.members === 'number' ? g.counts.members : undefined;
-            const memberCount =
-              typeof storedCount === 'number'
-                ? storedCount
-                : typeof apiCount === 'number'
-                ? apiCount
-                : members.length;
-            const countLabel = memberCount === 1 ? '1 member' : `${memberCount} members`;
-            return (
-              <Card
-                key={g.id}
-                pressStyle={{ scale: 0.98 }}
-                onPress={() =>
-                  router.push({ pathname: '/tabs/groups/[groupId]', params: { groupId: String(g.id) } } as never)
-                }
-                h={62}
-                br={12}
-                bw={1}
-                bc="$gray5"
-                px="$4"
-                ai="center"
-                jc="center"
-              >
-                <XStack w="100%" jc="space-between" ai="center">
-                  <YStack>
-                    <Paragraph fow="700" fos={16}>{g.name ?? 'Group'}</Paragraph>
-                    <Paragraph size={12} col="$gray10">
-                      {memberCount === 0 ? 'No members yet' : countLabel}
-                    </Paragraph>
-                  </YStack>
-                  <AvatarStack members={members} totalCount={memberCount} />
-                </XStack>
-              </Card>
-            );
-          })}
-        </YStack>
+        <YStack gap="$3">{cards}</YStack>
       )}
 
       <Fab onPress={() => router.push('/tabs/groups/create' as never)} />

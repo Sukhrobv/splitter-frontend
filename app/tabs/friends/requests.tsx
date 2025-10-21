@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
-  YStack, XStack, Paragraph, Separator, Button, Spinner, Input, Text
+  YStack,
+  XStack,
+  Paragraph,
+  Separator,
+  Button,
+  Spinner,
+  Input,
+  Text,
 } from 'tamagui';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, CircleCheck, CircleX, QrCode, Scan } from '@tamagui/lucide-icons';
+import { CircleCheck, CircleX, QrCode, Scan } from '@tamagui/lucide-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import UserAvatar from '@/shared/ui/UserAvatar';
@@ -11,9 +19,9 @@ import { FriendsApi } from '@/features/friends/api/friends.api';
 import { useAppStore } from '@/shared/lib/stores/app-store';
 
 const LIST_W = 358;
-const ROW_H  = 60;
-const TAB_W  = 171;
-const TAB_H  = 37;
+const ROW_H = 60;
+const TAB_W = 171;
+const TAB_H = 37;
 
 const TINT_REJECT = '#E74C3C1A';
 const TINT_ACCEPT = '#2ECC711A';
@@ -21,25 +29,52 @@ const TINT_ACCEPT = '#2ECC711A';
 function useAutoNotice() {
   const [text, setText] = useState<string | undefined>();
   const [kind, setKind] = useState<'success' | 'error' | undefined>();
+
   useEffect(() => {
     if (!text) return;
-    const t = setTimeout(() => { setText(undefined); setKind(undefined); }, 2200);
-    return () => clearTimeout(t);
+    const timeout = setTimeout(() => {
+      setText(undefined);
+      setKind(undefined);
+    }, 2200);
+    return () => clearTimeout(timeout);
   }, [text]);
+
   return {
-    ok:  (t: string) => { setKind('success'); setText(t); },
-    err: (t: string) => { setKind('error');   setText(t); },
-    node: text ? <Paragraph col={kind === 'error' ? '$red10' : '$green10'}>{text}</Paragraph> : null,
+    ok: (message: string) => {
+      setKind('success');
+      setText(message);
+    },
+    err: (message: string) => {
+      setKind('error');
+      setText(message);
+    },
+    node: text ? (
+      <Paragraph col={kind === 'error' ? '$red10' : '$green10'}>{text}</Paragraph>
+    ) : null,
   };
 }
 
 function IconPill({
-  onPress, disabled, tint, children,
-}: { onPress?: () => void; disabled?: boolean; tint: string; children: React.ReactNode }) {
+  onPress,
+  disabled,
+  tint,
+  children,
+}: {
+  onPress?: () => void;
+  disabled?: boolean;
+  tint: string;
+  children: React.ReactNode;
+}) {
   return (
     <Button
-      chromeless circular w={28} h={28} p={0}
-      bg={tint} onPress={onPress} disabled={disabled}
+      chromeless
+      circular
+      w={28}
+      h={28}
+      p={0}
+      bg={tint}
+      onPress={onPress}
+      disabled={disabled}
       pressStyle={{ opacity: 0.9 }}
     >
       {children}
@@ -49,87 +84,168 @@ function IconPill({
 
 type UserLite = { uniqueId?: string; username?: string; displayName?: string; id?: number };
 
+interface UserRowProps {
+  title: string;
+  uid?: string;
+  right?: React.ReactNode;
+  index: number;
+  total: number;
+  avatarUrl?: string;
+}
+
+function UserRow({ title, uid, right, index, total, avatarUrl }: UserRowProps) {
+  const isFirst = index === 0;
+  const isLast = index === total - 1;
+  const avatarLabel = (title || 'U').slice(0, 1).toUpperCase() || 'U';
+
+  return (
+    <XStack
+      w={LIST_W}
+      h={ROW_H}
+      ai="center"
+      jc="space-between"
+      px={16}
+      alignSelf="center"
+      bg="$color1"
+      borderColor="$gray5"
+      borderLeftWidth={1}
+      borderRightWidth={1}
+      borderTopWidth={isFirst ? 1 : 0}
+      borderBottomWidth={isLast ? 1 : 0}
+    >
+      <XStack ai="center" gap="$3">
+        <UserAvatar
+          uri={avatarUrl ?? undefined}
+          label={avatarLabel}
+          size={36}
+          textSize={14}
+          backgroundColor="$gray5"
+        />
+        <YStack>
+          <Text fontSize={17} fontWeight="600">
+            {title}
+          </Text>
+          {!!uid && (
+            <Paragraph fontSize={14} color="$gray10">
+              {uid}
+            </Paragraph>
+          )}
+        </YStack>
+      </XStack>
+      {right}
+    </XStack>
+  );
+}
+
 export default function FriendsRequestsUnified() {
   const router = useRouter();
   const notice = useAutoNotice();
+  const { t } = useTranslation();
 
   const { requestsRaw, fetchAll, loading, error, search, send, friends } = useFriendsStore();
-  const meUniqueId = useAppStore(s => s.user?.uniqueId);
+  const meUniqueId = useAppStore((s) => s.user?.uniqueId);
 
-  const [q, setQ] = useState('');
-  const [res, setRes] = useState<UserLite[]>([]);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<UserLite[]>([]);
   const [searching, setSearching] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   const [busyId, setBusyId] = useState<number | null>(null);
   const [tab, setTab] = useState<'outgoing' | 'incoming'>('incoming');
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   const incoming = useMemo(() => requestsRaw?.incoming ?? [], [requestsRaw]);
   const outgoing = useMemo(() => requestsRaw?.outgoing ?? [], [requestsRaw]);
 
   const friendsSet = useMemo(() => {
-    const s = new Set<string>();
-    (friends ?? []).forEach((f: any) => {
-      const uid = f?.user?.uniqueId ?? f?.uniqueId;
-      if (uid) s.add(uid);
+    const set = new Set<string>();
+    (friends ?? []).forEach((friend: any) => {
+      const uid = friend?.user?.uniqueId ?? friend?.uniqueId;
+      if (uid) set.add(uid);
     });
-    return s;
+    return set;
   }, [friends]);
 
   const outgoingSet = useMemo(() => {
-    const s = new Set<string>();
-    (outgoing ?? []).forEach((r: any) => {
-      const uid = r?.to?.uniqueId ?? r?.toUniqueId ?? r?.uniqueId;
-      if (uid) s.add(uid);
+    const set = new Set<string>();
+    (outgoing ?? []).forEach((request: any) => {
+      const uid = request?.to?.uniqueId ?? request?.toUniqueId ?? request?.uniqueId;
+      if (uid) set.add(uid);
     });
-    return s;
+    return set;
   }, [outgoing]);
 
   const incomingSet = useMemo(() => {
-    const s = new Set<string>();
-    (incoming ?? []).forEach((r: any) => {
-      const uid = r?.from?.uniqueId ?? r?.fromUniqueId ?? r?.uniqueId;
-      if (uid) s.add(uid);
+    const set = new Set<string>();
+    (incoming ?? []).forEach((request: any) => {
+      const uid = request?.from?.uniqueId ?? request?.fromUniqueId ?? request?.uniqueId;
+      if (uid) set.add(uid);
     });
-    return s;
+    return set;
   }, [incoming]);
 
+  const statusLabels = useMemo(
+    () => ({
+      add: t('friends.status.add', 'Add'),
+      you: t('friends.status.you', 'You'),
+      friend: t('friends.status.friend', 'Friend'),
+      requested: t('friends.status.requested', 'Requested'),
+      incoming: t('friends.status.incoming', 'Incoming'),
+    }),
+    [t]
+  );
+
+  const unknownUser = t('friends.common.unknownUser', 'Unknown user');
+
   const wrap = useCallback(
-    async (fn: () => Promise<any>, id: number, okMsg: string) => {
+    async (fn: () => Promise<any>, id: number, successMessage: string) => {
       setBusyId(id);
       try {
         await fn();
-        notice.ok(okMsg);
+        notice.ok(successMessage);
         await fetchAll();
-      } catch (e: any) {
-        notice.err(e?.message || 'Something went wrong');
+      } catch (error: any) {
+        notice.err(error?.message || t('friends.common.error', 'Something went wrong'));
       } finally {
         setBusyId(null);
       }
     },
-    [fetchAll, notice]
+    [fetchAll, notice, t]
   );
 
-  const accept = (fromId: number, name?: string, uid?: string) =>
-    wrap(() => FriendsApi.accept(meUniqueId!, fromId), fromId,
-      `Accepted ${name ?? ''}${name && uid ? ' ' : ''}${uid ? `(${uid})` : ''}`.trim());
+  const accept = (fromId: number, name?: string, uid?: string) => {
+    const target = name ?? uid ?? unknownUser;
+    return wrap(
+      () => FriendsApi.accept(meUniqueId!, fromId),
+      fromId,
+      t('friends.requests.accepted', { target })
+    );
+  };
 
-  const reject = (fromId: number, name?: string, uid?: string) =>
-    wrap(() => FriendsApi.reject(meUniqueId!, fromId), fromId,
-      `Rejected ${name ?? ''}${name && uid ? ' ' : ''}${uid ? `(${uid})` : ''}`.trim());
+  const reject = (fromId: number, name?: string, uid?: string) => {
+    const target = name ?? uid ?? unknownUser;
+    return wrap(
+      () => FriendsApi.reject(meUniqueId!, fromId),
+      fromId,
+      t('friends.requests.rejected', { target })
+    );
+  };
 
   async function doSearch() {
-    if (!q) return;
+    if (!query.trim()) return;
     setSearching(true);
     try {
-      const r = await search(q.trim());
-      setRes(r || []);
-      if (!r || r.length === 0) notice.ok('No results found');
-    } catch (e: any) {
-      notice.err(e?.message ?? 'Search failed');
-      setRes([]);
+      const response = await search(query.trim());
+      setResults(response || []);
+      if (!response || response.length === 0) {
+        notice.ok(t('friends.search.noResults', 'No results found'));
+      }
+    } catch (error: any) {
+      notice.err(error?.message ?? t('friends.search.error', 'Search failed'));
+      setResults([]);
     } finally {
       setSearching(false);
     }
@@ -140,264 +256,263 @@ export default function FriendsRequestsUnified() {
     setSendingId(uniqueId);
     try {
       await send(uniqueId);
-      notice.ok(`Invite sent to ${label ?? uniqueId}`);
-      await fetchAll();
-    } catch (e: any) {
-      notice.err(e?.message ?? 'Could not send invite');
+      const target = label ?? uniqueId ?? unknownUser;
+      notice.ok(t('friends.search.inviteSent', { target }));
+    } catch (error: any) {
+      notice.err(error?.message ?? t('friends.search.inviteFailed', 'Could not send invite'));
     } finally {
       setSendingId(null);
     }
   }
 
-  const fmtUid = (uid?: string) => (uid ? `@${uid.toLowerCase().replace('user#', 'user')}` : '');
+  const onSubmitSearch = () => {
+    if (!searching) doSearch();
+  };
 
-  // слитная строка списка
-  function UserRow({
-    title, uid, right, index, total, avatarUrl,
-  }: { title: string; uid?: string; right?: React.ReactNode; index: number; total: number; avatarUrl?: string }) {
-    const isFirst = index === 0;
-    const isLast  = index === total - 1;
-    const avatarLabel = (title || 'U').slice(0, 1).toUpperCase() || 'U';
-
-    return (
-      <XStack
-        w={LIST_W}
-        h={ROW_H}
-        ai="center"
-        jc="space-between"
-        px={16}
-        alignSelf="center"
-        bg="$color1"
-        borderColor="$gray5"
-        borderLeftWidth={1}
-        borderRightWidth={1}
-        borderTopWidth={1}
-        borderBottomWidth={isLast ? 1 : 0}
-        borderTopLeftRadius={isFirst ? 8 : 0}
-        borderTopRightRadius={isFirst ? 8 : 0}
-        borderBottomLeftRadius={isLast ? 8 : 0}
-        borderBottomRightRadius={isLast ? 8 : 0}
-      >
-        <XStack ai="center" gap="$3">
-          <UserAvatar
-            uri={avatarUrl ?? undefined}
-            label={avatarLabel}
-            size={36}
-            textSize={14}
-            backgroundColor="$gray5"
-          />
-          <YStack>
-            <Text fontSize={17} fontWeight="600">{title}</Text>
-            {!!uid && <Paragraph fontSize={14} color="$gray10">{fmtUid(uid)}</Paragraph>}
-          </YStack>
-        </XStack>
-        <XStack ai="center" gap="$2">{right}</XStack>
-      </XStack>
-    );
-  }
-
-  if (loading && !requestsRaw) return <Spinner />;
+  const tabLabels = useMemo(
+    () => ({
+      outgoing: t('friends.requests.tabOutgoing', 'Outgoing'),
+      incoming: t('friends.requests.tabIncoming', 'Incoming'),
+    }),
+    [t]
+  );
 
   return (
-    <YStack f={1} ai="center" bg="$color1">
-      <YStack w={LIST_W} gap="$3" p="$4">
-        {/* Back */}
-        <XStack>
-          <Button
-            size="$2" h={22} px={0}
-            unstyled chromeless bg="transparent" borderWidth={0}
-            color="$gray12" pressStyle={{ opacity: 0.6 }}
-            icon={<ChevronLeft size={18} color="$gray12" />}
-            onPress={() => router.replace('/tabs/friends')}
-          >
-            Back to Friends
-          </Button>
-        </XStack>
+    <YStack f={1} p="$4" gap="$4">
+      {notice.node}
+      {error && <Paragraph col="$red10">{error}</Paragraph>}
 
-        {notice.node}
-        {error && <Paragraph col="$red10">{error}</Paragraph>}
+      {/* Invite quick actions */}
+      <XStack jc="space-between" ai="center" alignSelf="center" w={LIST_W}>
+        <Button
+          onPress={() =>
+            router.push({ pathname: '/tabs/scan-invite', params: { from: 'friends-requests' } } as never)
+          }
+          size="$3"
+          borderRadius="$3"
+          theme="active"
+          icon={<Scan size={18} />}
+        >
+          {t('friends.requests.scanInvite', 'Scan invite')}
+        </Button>
+        <Button
+          onPress={() => router.push('/tabs/friends/invite' as never)}
+          size="$3"
+          borderRadius="$3"
+          theme="gray"
+          icon={<QrCode size={18} />}
+        >
+          {t('friends.requests.showMyQr', 'Show my QR')}
+        </Button>
+      </XStack>
 
-        {/* Invite actions (UX): Scan + My QR */}
-        <XStack jc="space-between" ai="center" alignSelf="center" w={LIST_W}>
-          <Button
-            onPress={() =>
-              router.push({ pathname: '/tabs/scan-invite', params: { from: 'friends-requests' } } as never)
+      {/* Search */}
+      <XStack ai="center" alignSelf="center">
+        <Input
+          w={LIST_W}
+          value={query}
+          onChangeText={setQuery}
+          placeholder={t('friends.search.placeholder', 'Enter uniqueId, e.g. USER#1234')}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="search"
+          onSubmitEditing={onSubmitSearch}
+          h={41}
+          px={16}
+          borderRadius={10}
+          fontSize={14}
+          fontWeight="500"
+          bg="$backgroundPress"
+          borderWidth={0}
+          color="$gray12"
+          placeholderTextColor="$gray10"
+        />
+      </XStack>
+
+      {/* Search results */}
+      {searching ? (
+        <Spinner />
+      ) : results.length > 0 ? (
+        <>
+          <Separator />
+          {results.map((user, index) => {
+            const uid = user.uniqueId;
+            const avatarUrl = (user as any)?.avatarUrl ?? (user as any)?.user?.avatarUrl ?? undefined;
+            const fallbackTitle = user.displayName || user.username || uid;
+            const title = fallbackTitle || unknownUser;
+
+            const isMe = !!uid && !!meUniqueId && uid === meUniqueId;
+            const isFriend = !!uid && friendsSet.has(uid);
+            const isOutgoing = !!uid && outgoingSet.has(uid);
+            const isIncoming = !!uid && incomingSet.has(uid);
+
+            let label = statusLabels.add;
+            let disabled = false;
+            if (isMe) {
+              label = statusLabels.you;
+              disabled = true;
+            } else if (isFriend) {
+              label = statusLabels.friend;
+              disabled = true;
+            } else if (isOutgoing) {
+              label = statusLabels.requested;
+              disabled = true;
+            } else if (isIncoming) {
+              label = statusLabels.incoming;
+              disabled = true;
             }
-            size="$3"
-            borderRadius="$3"
-            theme="active"
-            icon={<Scan size={18} />}
-          >
-            Scan invite
-          </Button>
-          <Button
-            onPress={() => router.push('/tabs/friends/invite' as never)}
-            size="$3"
-            borderRadius="$3"
-            theme="gray"
-            icon={<QrCode size={18} />}
-          >
-            Show my QR
-          </Button>
-        </XStack>
 
-        {/* SEARCH */}
-        <XStack ai="center" alignSelf="center">
-          <Input
-            w={LIST_W}
-            value={q}
-            onChangeText={setQ}
-            placeholder="Enter uniqueId, e.g. USER#1234"
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-            onSubmitEditing={doSearch}
-            h={41} px={16} borderRadius={10}
-            fontSize={14} fontWeight="500"
-            bg="$backgroundPress" borderWidth={0}
-            color="$gray12" placeholderTextColor="$gray10"
-          />
-        </XStack>
+            const isBusy = sendingId === uid;
 
-        {/* SEARCH RESULTS */}
-        {res.length > 0 && (
-          <>
-            <Separator />
-            {res.map((u, i) => {
-              const uid = u.uniqueId;
-              const avatarUrl = (u as any)?.avatarUrl ?? (u as any)?.user?.avatarUrl ?? null;
-              const title = u.displayName || u.username || uid || '—';
-              const isMe = !!uid && !!meUniqueId && uid === meUniqueId;
-              const isFriend = !!uid && friendsSet.has(uid);
-              const isOutgoing = !!uid && outgoingSet.has(uid);
-              const isIncoming = !!uid && incomingSet.has(uid);
+            return (
+              <UserRow
+                key={`${uid ?? 'u'}-${index}`}
+                index={index}
+                total={results.length}
+                title={title}
+                uid={uid}
+                avatarUrl={avatarUrl}
+                right={
+                  <Button
+                    size="$2"
+                    borderRadius={10}
+                    borderWidth={1}
+                    h={37}
+                    px={10}
+                    gap={10}
+                    w={TAB_W}
+                    onPress={() => sendInvite(uid, title)}
+                    disabled={!uid || disabled || isBusy}
+                  >
+                    {isBusy ? '...' : label}
+                  </Button>
+                }
+              />
+            );
+          })}
+        </>
+      ) : (
+        <Paragraph col="$gray10">{t('friends.search.hint', 'Search by uniqueId to find someone')}</Paragraph>
+      )}
 
-              let label = 'Add';
-              let disabled = false;
-              if (isMe) { label = 'You'; disabled = true; }
-              else if (isFriend) { label = 'Friend'; disabled = true; }
-              else if (isOutgoing) { label = 'Requested'; disabled = true; }
-              else if (isIncoming) { label = 'Incoming'; disabled = true; }
+      {/* Tabs */}
+      <Separator />
+      <XStack gap={10} ai="center" jc="center" alignSelf="center">
+        <Button
+          w={TAB_W}
+          h={TAB_H}
+          gap={10}
+          onPress={() => setTab('outgoing')}
+          variant="outlined"
+          borderColor={tab === 'outgoing' ? '$green8' : '$gray6'}
+          bg={tab === 'outgoing' ? '$green3' : '$color1'}
+          color="$gray12"
+          borderRadius={10}
+          borderWidth={1}
+          p="$2"
+        >
+          {tabLabels.outgoing}
+        </Button>
+        <Button
+          w={TAB_W}
+          h={TAB_H}
+          gap={10}
+          onPress={() => setTab('incoming')}
+          variant="outlined"
+          borderColor={tab === 'incoming' ? '$green8' : '$gray6'}
+          bg={tab === 'incoming' ? '$green3' : '$color1'}
+          color="$gray12"
+          borderRadius={10}
+          borderWidth={1}
+          p="$2"
+        >
+          {tabLabels.incoming}
+        </Button>
+      </XStack>
 
-              const isBusy = sendingId === uid;
+      {/* Lists */}
+      {tab === 'incoming' ? (
+        <>
+          <Separator />
+          {incoming.length === 0 ? (
+            <Paragraph col="$gray10">{t('friends.requests.emptyIncoming', 'No incoming requests')}</Paragraph>
+          ) : (
+            incoming.map((request: any, index: number) => {
+              const name =
+                request.from?.displayName ||
+                request.from?.username ||
+                (request.from?.id ? `User #${request.from.id}` : undefined) ||
+                unknownUser;
+              const uid = request.from?.uniqueId;
+              const fromId = request.from?.id as number;
+              const avatarUrl = request.from?.avatarUrl ?? null;
+              const isBusy = busyId === fromId;
 
               return (
                 <UserRow
-                  key={`${uid ?? 'u'}-${i}`}
-                  index={i} total={res.length}
-                  title={title!} uid={uid} avatarUrl={avatarUrl ?? undefined}
+                  key={`in-${fromId}-${index}`}
+                  index={index}
+                  total={incoming.length}
+                  title={name}
+                  uid={uid}
+                  avatarUrl={avatarUrl ?? undefined}
                   right={
-                    <Button
-                      size="$2" borderRadius={10} borderWidth={1}
-                      h={37} px={10} gap={10} w={171}
-                      onPress={() => sendInvite(uid, title!)}
-                      disabled={!uid || disabled || isBusy}
-                    >
-                      {isBusy ? '...' : label}
-                    </Button>
+                    <XStack gap={10}>
+                      <IconPill
+                        tint={TINT_REJECT}
+                        onPress={() => reject(fromId, name, uid)}
+                        disabled={isBusy}
+                      >
+                        <CircleX size={16} color="#E74C3C" />
+                      </IconPill>
+                      <IconPill
+                        tint={TINT_ACCEPT}
+                        onPress={() => accept(fromId, name, uid)}
+                        disabled={isBusy}
+                      >
+                        <CircleCheck size={16} color="#2ECC71" />
+                      </IconPill>
+                    </XStack>
                   }
                 />
               );
-            })}
-          </>
-        )}
+            })
+          )}
+        </>
+      ) : (
+        <>
+          <Separator />
+          {outgoing.length === 0 ? (
+            <Paragraph col="$gray10">{t('friends.requests.emptyOutgoing', 'No outgoing requests')}</Paragraph>
+          ) : (
+            outgoing.map((request: any, index: number) => {
+              const name =
+                request.to?.displayName ||
+                request.to?.username ||
+                request.to?.uniqueId ||
+                unknownUser;
+              const uid = request.to?.uniqueId;
+              const avatarUrl = request.to?.avatarUrl ?? null;
 
-        {/* TABS */}
-        <Separator />
-        <XStack gap={10} ai="center" jc="center" alignSelf="center">
-          <Button
-            w={TAB_W} h={TAB_H} gap={10}
-            onPress={() => setTab('outgoing')}
-            variant="outlined"
-            borderColor={tab === 'outgoing' ? '$green8' : '$gray6'}
-            bg={tab === 'outgoing' ? '$green3' : '$color1'}
-            color="$gray12"
-            borderRadius={10} borderWidth={1}
-            p="$2"
-          >
-            Outgoing
-          </Button>
-          <Button
-            w={TAB_W} h={TAB_H} gap={10}
-            onPress={() => setTab('incoming')}
-            variant="outlined"
-            borderColor={tab === 'incoming' ? '$green8' : '$gray6'}
-            bg={tab === 'incoming' ? '$green3' : '$color1'}
-            color="$gray12"
-            borderRadius={10} borderWidth={1}
-            p="$2"
-          >
-            Incoming
-          </Button>
-        </XStack>
-
-        {/* LISTS */}
-        {tab === 'incoming' ? (
-          <>
-            <Separator />
-            {incoming.length === 0 ? (
-              <Paragraph col="$gray10">No incoming requests</Paragraph>
-            ) : (
-              incoming.map((r: any, idx: number) => {
-                const name = r.from?.displayName || r.from?.username || `User #${r.from?.id}`;
-                const uid  = r.from?.uniqueId;
-                const fromId = r.from?.id as number;
-                const avatarUrl = r.from?.avatarUrl ?? null;
-                const isBusy = busyId === fromId;
-
-                return (
-                  <UserRow
-                    key={`in-${fromId}-${idx}`}
-                    index={idx} total={incoming.length}
-                    title={name} uid={uid} avatarUrl={avatarUrl ?? undefined}
-                    right={
-                      <XStack gap={10}>
-                        <IconPill
-                          tint={TINT_REJECT}
-                          onPress={() => reject(fromId, name, uid)}
-                          disabled={isBusy}
-                        >
-                          <CircleX size={16} color="#E74C3C" />
-                        </IconPill>
-                        <IconPill
-                          tint={TINT_ACCEPT}
-                          onPress={() => accept(fromId, name, uid)}
-                          disabled={isBusy}
-                        >
-                          <CircleCheck size={16} color="#2ECC71" />
-                        </IconPill>
-                      </XStack>
-                    }
-                  />
-                );
-              })
-            )}
-          </>
-        ) : (
-          <>
-            <Separator />
-            {outgoing.length === 0 ? (
-              <Paragraph col="$gray10">No outgoing requests</Paragraph>
-            ) : (
-              outgoing.map((r: any, idx: number) => {
-                const name = r.to?.displayName || r.to?.username || r.to?.uniqueId || '—';
-                const uid  = r.to?.uniqueId;
-               const avatarUrl = r.to?.avatarUrl ?? null;
-
-                return (
-                  <UserRow
-                    key={`out-${uid ?? idx}`}
-                    index={idx} total={outgoing.length}
-                    title={name} uid={uid} avatarUrl={avatarUrl ?? undefined}
-                    right={<Paragraph size="$2" col="$gray10">Requested</Paragraph>}
-                  />
-                );
-              })
-            )}
-          </>
-        )}
-      </YStack>
+              return (
+                <UserRow
+                  key={`out-${uid ?? index}`}
+                  index={index}
+                  total={outgoing.length}
+                  title={name}
+                  uid={uid}
+                  avatarUrl={avatarUrl ?? undefined}
+                  right={
+                    <Paragraph size="$2" col="$gray10">
+                      {t('friends.requests.requestedLabel', 'Requested')}
+                    </Paragraph>
+                  }
+                />
+              );
+            })
+          )}
+        </>
+      )}
     </YStack>
   );
 }
-

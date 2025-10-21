@@ -4,12 +4,12 @@
     "subtitle": "Do'stlar bilan oson hisob-kitob"
   },
   "features": {
-    "scan": "Chek Skanerlash",
+    "scan": "Chek skanerlash",
     "scanDesc": "Cheklaringizni suratga oling",
-    "split": "Pulni Bo'lish",
+    "split": "Pulni bo'lish",
     "splitDesc": "Do'stlar bilan xarajatni taqsimlang",
-    "calculate": "Avtomatik Hisoblash",
-    "calculateDesc": "Kim qancha to'lashni bilish"
+    "calculate": "Avtomatik hisoblash",
+    "calculateDesc": "Kim qancha to'lashini biling"
   },
   "welcome": {
     "message": "Xush kelibsiz! Boshlaymiz",
@@ -19,11 +19,16 @@
   },
   "auth": {
     "signIn": "Kirish",
-    "createAccount": "Hisob Yaratish",
+    "signInDesc": "Xush kelibsiz! Davom etish uchun tizimga kiring",
+    "createAccount": "Hisob yaratish",
+    "createAccountDesc": "Do'stlar bilan hisob-kitobni hoziroq boshlang",
     "email": "Email",
+    "emailPlaceholder": "Email kiriting",
     "password": "Parol",
-    "confirmPassword": "Parolni Tasdiqlash",
+    "passwordPlaceholder": "Parolingizni kiriting",
+    "confirmPassword": "Parolni tasdiqlash",
     "username": "Foydalanuvchi nomi",
+    "usernamePlaceholder": "Foydalanuvchi nomini kiriting",
     "forgotPassword": "Parolni unutdingizmi?",
     "noAccount": "Hisobingiz yo'qmi?",
     "haveAccount": "Hisobingiz bormi?"
@@ -38,10 +43,134 @@
     "continue": "Davom etish",
     "back": "Orqaga"
   },
+  "home": {
+    "header": {
+      "greeting": "Salom, {{name}}!",
+      "friendFallback": "do'stim"
+    },
+    "scan": {
+      "cta": "Taklifni skanerlang"
+    },
+    "actions": {
+      "friends": "Do'stlar",
+      "groups": "Guruhlar"
+    },
+    "recent": {
+      "title": "So'nggi hisoblar",
+      "showMore": "Ko'proq ko'rish",
+      "loading": "Hisoblar yuklanmoqda...",
+      "empty": "Hali hisoblar mavjud emas",
+      "summary": "{{date}} • {{participants}}",
+      "fallbackName": "Hisob",
+      "participants": "{{count}} ishtirokchi",
+      "participants_one": "{{count}} ishtirokchi",
+      "participants_other": "{{count}} ishtirokchi",
+      "amount": "{{currency}} {{amount}}"
+    },
+    "features": {
+      "title": "Nimalar qilishingiz mumkin"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "status": {
+      "saved": "Saqlandi"
+    },
+    "actions": {
+      "copy": "Nusxa olish"
+    },
+    "labels": {
+      "guest": "Mehmon",
+      "notAvailable": "Mavjud emas"
+    },
+    "avatar": {
+      "title": "Avatar",
+      "hint": "Yuklangan avatarlar bizning CDN orqali darhol yangilanadi.",
+      "upload": "Telefoningizdan yuklash",
+      "uploading": "Yuklanmoqda...",
+      "reset": "Avatarni tiklash",
+      "resetting": "Tiklanmoqda..."
+    },
+    "info": {
+      "title": "Foydalanuvchi ma'lumotlari",
+      "usernameLabel": "Foydalanuvchi nomi",
+      "usernamePlaceholder": "Yangi foydalanuvchi nomini kiriting",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Yangi email kiriting",
+      "userId": "Foydalanuvchi ID"
+    },
+    "password": {
+      "title": "Parolni o'zgartirish",
+      "currentLabel": "Joriy parol",
+      "currentPlaceholder": "Joriy parolni kiriting",
+      "newLabel": "Yangi parol",
+      "newPlaceholder": "Yangi parolni kiriting",
+      "confirmLabel": "Yangi parolni tasdiqlang",
+      "confirmPlaceholder": "Yangi parolni qayta kiriting",
+      "requirements": "Parol kamida 8 ta belgi bo'lib, katta va kichik harf, raqam va maxsus belgini o'z ichiga olishi kerak.",
+      "submit": "Parolni o'zgartirish",
+      "updating": "Yangilanmoqda..."
+    },
+    "logout": "Chiqish",
+    "copy": {
+      "successTitle": "Nusxa olindi",
+      "successMessage": "{{field}} almashish buferiga nusxalandi.",
+      "unavailableMessage": "{{field}} hali mavjud emas."
+    },
+    "alerts": {
+      "permissionTitle": "Ruxsat kerak",
+      "permissionMessage": "Avatar tanlash uchun galereyaga kirishga ruxsat bering.",
+      "unavailableTitle": "Mavjud emas",
+      "avatarLoginRequired": "Avatarni yangilash uchun tizimga kiring.",
+      "profileLoginRequired": "Profilni yangilash uchun tizimga kiring.",
+      "passwordLoginRequired": "Parolni o'zgartirish uchun tizimga kiring.",
+      "avatarUpdateFailed": "Avatarni yangilab bo'lmadi.",
+      "avatarResetFailed": "Avatarni tiklab bo'lmadi.",
+      "usernameUpdateFailed": "Foydalanuvchi nomini yangilab bo'lmadi.",
+      "emailUpdateFailed": "Emailni yangilab bo'lmadi.",
+      "passwordChangeFailed": "Parolni o'zgartirib bo'lmadi.",
+      "logoutFailed": "Chiqib bo'lmadi. Iltimos, yana urinib ko'ring.",
+      "imageMissing": "Rasm faylining URI topilmadi.",
+      "uploadReadFailed": "Tanlangan faylni o'qib bo'lmadi."
+    },
+    "validation": {
+      "usernameRequired": "Foydalanuvchi nomini kiriting.",
+      "usernameMin": "Foydalanuvchi nomi kamida 2 ta belgidan iborat bo'lishi kerak.",
+      "emailRequired": "Email kiriting.",
+      "emailInvalid": "Yaroqli email kiriting.",
+      "passwordCurrent": "Joriy parolni kiriting.",
+      "passwordLength": "Yangi parol kamida 8 ta belgi bo'lishi kerak.",
+      "passwordComplexity": "Parolda katta va kichik harf, raqam va maxsus belgi bo'lishi kerak.",
+      "passwordMismatch": "Parollar mos emas.",
+      "passwordDifferent": "Boshqa parol tanlang."
+    }
+  },
+  "navigation": {
+    "mainMenu": "Bosh menyu",
+    "tabs": {
+      "home": "Bosh sahifa",
+      "settings": "Sozlamalar",
+      "profile": "Profil"
+    },
+    "groups": {
+      "title": "Guruhlar",
+      "create": "Yangi guruh",
+      "details": "Guruh"
+    },
+    "scanInvite": "Taklifni skanerlash",
+    "friendQr": "Do'st QR kodi",
+    "groupQr": "Guruh QR kodi",
+    "scanReceipt": "Chekni skanerlash",
+    "participants": "Ishtirokchilar",
+    "itemsSplit": "Xarajatlarni bo'lish",
+    "finish": "Yakunlash",
+    "history": "So'nggi hisoblar",
+    "historyDetails": "Hisob tafsilotlari"
+  },
   "settings": {
     "language": {
       "title": "Til",
-      "description": "Ilovada qaysi til ishlatilishini tanlang.",
+      "description": "Ilovada ishlatiladigan tilni tanlang.",
       "options": {
         "en": "Ingliz tili",
         "ja": "Yapon tili",

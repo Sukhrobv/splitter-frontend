@@ -81,7 +81,10 @@ export default function FriendsScreen() {
           
           {filteredFriends.length === 0 && !loading && (
              <Paragraph ta="center" col="$gray10" mt="$4">
-                {searchQuery ? "No one found" : t('friends.empty', 'No friends yet. Tap + to add.')}
+                {searchQuery
+                  ? t('friends.search.noResults', 'No friends found')
+                  : t('friends.empty', 'No friends yet. Tap + to add.')
+                }
               </Paragraph>
           )}
         </ScrollView>

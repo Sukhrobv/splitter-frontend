@@ -66,7 +66,7 @@ function GlobalTabsHeader(props: any) {
   }, [fetchAll]);
 
   const requestsCount = useFriendsStore((s) => s.requestsRaw?.incoming?.length ?? 0);
-  const displayName = user?.username || 'Guest';
+  const displayName = user?.username || t('profile.labels.guest', 'Guest');
   const userInitial = displayName.slice(0, 1).toUpperCase();
 
   const handleOpenProfile = useCallback(() => {
@@ -113,6 +113,24 @@ export default function TabLayout() {
   const { user } = useAppStore();
   const { t } = useTranslation();
 
+  const greetingName = user?.username || t('home.header.friendFallback', 'friend');
+  const homeTitle = t('home.header.greeting', { name: greetingName });
+  const homeLabel = t('navigation.tabs.home', 'Home');
+  const settingsTitle = t('navigation.tabs.settings', 'Settings');
+  const profileTitle = t('profile.title', 'Profile');
+  const groupsTitle = t('navigation.groups.title', 'Groups');
+  const newGroupTitle = t('navigation.groups.create', 'New group');
+  const groupDetailsTitle = t('navigation.groups.details', 'Group');
+  const scanInviteTitle = t('navigation.scanInvite', 'Scan Invite');
+  const friendQrTitle = t('navigation.friendQr', 'My Friend QR');
+  const groupQrTitle = t('navigation.groupQr', 'Group QR');
+  const scanReceiptTitle = t('navigation.scanReceipt', 'Scan Receipt');
+  const participantsTitle = t('navigation.participants', 'Participants');
+  const itemsSplitTitle = t('navigation.itemsSplit', 'Items Split');
+  const finishTitle = t('navigation.finish', 'Finish');
+  const historyTitle = t('navigation.history', 'Recent bills');
+  const historyDetailsTitle = t('navigation.historyDetails', 'Bill details');
+
   return (
     <Tabs
       screenOptions={{
@@ -125,8 +143,8 @@ export default function TabLayout() {
         name="index"
         options={{
           href: null,
-          title: `Hi, ${user?.username || 'friend'}!`,
-          tabBarLabel: 'Home',
+          title: homeTitle,
+          tabBarLabel: homeLabel,
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
@@ -134,8 +152,8 @@ export default function TabLayout() {
         name="settings"
         options={{
           href: null,
-          title: 'Settings',
-          tabBarLabel: 'Settings',
+          title: settingsTitle,
+          tabBarLabel: settingsTitle,
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
         }}
       />
@@ -144,7 +162,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           href: null,
-          title: t('profile.title', 'Profile'),
+          title: profileTitle,
         }}
       />
 
@@ -154,20 +172,20 @@ export default function TabLayout() {
       <Tabs.Screen name="friends/requests" options={{ href: null, title: t('friends.requests', 'Requests') }} />
 
       {/* HIDDEN: Groups */}
-      <Tabs.Screen name="groups/index"   options={{ href: null, title: 'Groups' }} />
-      <Tabs.Screen name="groups/create"  options={{ href: null, title: 'New group' }} />
-      <Tabs.Screen name="groups/[groupId]" options={{ href: null, title: 'Group' }} />
+      <Tabs.Screen name="groups/index"   options={{ href: null, title: groupsTitle }} />
+      <Tabs.Screen name="groups/create"  options={{ href: null, title: newGroupTitle }} />
+      <Tabs.Screen name="groups/[groupId]" options={{ href: null, title: groupDetailsTitle }} />
 
-      <Tabs.Screen name="scan-invite" options={{ href: null, title: 'Scan Invite' }} />
-      <Tabs.Screen name="friends/invite" options={{ href: null, title: 'My Friend QR' }} />
-      <Tabs.Screen name="groups/invite" options={{ href: null, title: 'Group QR' }} />
+      <Tabs.Screen name="scan-invite" options={{ href: null, title: scanInviteTitle }} />
+      <Tabs.Screen name="friends/invite" options={{ href: null, title: friendQrTitle }} />
+      <Tabs.Screen name="groups/invite" options={{ href: null, title: groupQrTitle }} />
 
-      <Tabs.Screen name="scan-receipt" options={{ href: null, title: 'Scan Receipt' }} />
-      <Tabs.Screen name="sessions/participants" options={{ href: null, title: 'Participants' }} />
-      <Tabs.Screen name="sessions/items-split" options={{ href: null, title: 'Items Split' }} />
-      <Tabs.Screen name="sessions/finish" options={{ href: null, title: 'Finish' }} />
-      <Tabs.Screen name="sessions/history/index" options={{ href: null, title: 'Recent bills' }} />
-      <Tabs.Screen name="sessions/history/[historyId]" options={{ href: null, title: 'Bill details' }} />
+      <Tabs.Screen name="scan-receipt" options={{ href: null, title: scanReceiptTitle }} />
+      <Tabs.Screen name="sessions/participants" options={{ href: null, title: participantsTitle }} />
+      <Tabs.Screen name="sessions/items-split" options={{ href: null, title: itemsSplitTitle }} />
+      <Tabs.Screen name="sessions/finish" options={{ href: null, title: finishTitle }} />
+      <Tabs.Screen name="sessions/history/index" options={{ href: null, title: historyTitle }} />
+      <Tabs.Screen name="sessions/history/[historyId]" options={{ href: null, title: historyDetailsTitle }} />
 
     </Tabs>
   );

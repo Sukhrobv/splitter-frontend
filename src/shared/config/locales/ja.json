@@ -1,32 +1,39 @@
 {
   "app": {
-    "name": "レシート分割",
-    "subtitle": "友達と簡単に割り勘"
+    "name": "レシートスプリッター",
+    "subtitle": "友だちと簡単に割り勘"
   },
   "features": {
-    "scan": "レシートスキャン",
-    "scanDesc": "レシートの写真を撮る",
+    "scan": "スキャン",
+    "scanDesc": "レシートを撮影しましょう",
     "split": "割り勘",
-    "splitDesc": "友達と費用を分ける",
-    "calculate": "自動計算",
-    "calculateDesc": "誰がいくら負担するかわかる"
+    "splitDesc": "友だちと費用を分ける",
+    "calculate": "計算",
+    "calculateDesc": "誰がいくら支払うかを把握"
   },
   "welcome": {
-    "message": "ようこそ！始めましょう",
-    "newUser": "レシート分割が初めてですか？",
+    "message": "ようこそ！さっそく始めましょう",
+    "newUser": "レシートスプリッターは初めてですか？",
     "newUserDesc": "アカウントを作成して割り勘を始めましょう",
     "existingUser": "すでにアカウントをお持ちですか？"
   },
   "auth": {
     "signIn": "ログイン",
-    "createAccount": "アカウント作成",
+    "signInDesc": "お帰りなさい！ログインして続けてください",
+    "createAccount": "アカウントを作成",
+    "createAccountDesc": "友だちと割り勘を始めましょう",
     "email": "メールアドレス",
+    "emailPlaceholder": "メールアドレスを入力",
     "password": "パスワード",
-    "confirmPassword": "パスワード確認",
+    "passwordPlaceholder": "パスワードを入力",
+    "confirmPassword": "パスワードを確認",
     "username": "ユーザー名",
-    "forgotPassword": "パスワードを忘れた？",
-    "noAccount": "アカウントをお持ちではありませんか？",
-    "haveAccount": "すでにアカウントをお持ちですか？"
+    "usernamePlaceholder": "ユーザー名を入力",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "noAccount": "アカウントをお持ちでないですか？",
+    "haveAccount": "すでにアカウントをお持ちですか？",
+    "loginError": "ログイン中にエラーが発生しました",
+    "registerError": "登録中にエラーが発生しました"
   },
   "common": {
     "welcome": "ようこそ",
@@ -35,17 +42,152 @@
     "success": "成功",
     "cancel": "キャンセル",
     "confirm": "確認",
-    "continue": "続行",
+    "continue": "続ける",
     "back": "戻る"
+  },
+  "friends": {
+    "title": "友だち",
+    "requests": "リクエスト",
+    "add": "友だちを追加",
+    "empty": "まだ友だちがいません。+ をタップして追加しましょう。",
+    "searchPlaceholder": "ID を入力してください (例: USER#1234)",
+    "send": "リクエストを送信",
+    "remove": "削除",
+    "loading": "読み込み中...",
+    "error": "読み込みに失敗しました"
+  },
+  "home": {
+    "header": {
+      "greeting": "{{name}}さん、こんにちは！",
+      "friendFallback": "友だち"
+    },
+    "scan": {
+      "cta": "招待をスキャンする"
+    },
+    "actions": {
+      "friends": "友だち",
+      "groups": "グループ"
+    },
+    "recent": {
+      "title": "最近の明細",
+      "showMore": "もっと見る",
+      "loading": "最近の明細を読み込み中...",
+      "empty": "まだ明細がありません",
+      "summary": "{{date}} • {{participants}}",
+      "fallbackName": "明細",
+      "participants": "{{count}} 人",
+      "participants_one": "{{count}} 人",
+      "participants_other": "{{count}} 人",
+      "amount": "{{currency}} {{amount}}"
+    },
+    "features": {
+      "title": "できること"
+    }
+  },
+  "profile": {
+    "title": "プロフィール",
+    "status": {
+      "saved": "保存しました"
+    },
+    "actions": {
+      "copy": "コピー"
+    },
+    "labels": {
+      "guest": "ゲスト",
+      "notAvailable": "該当なし"
+    },
+    "avatar": {
+      "title": "アバター",
+      "hint": "アップロードしたアバターはCDNを通じて即座に更新されます。",
+      "upload": "端末からアップロード",
+      "uploading": "アップロード中...",
+      "reset": "アバターをリセット",
+      "resetting": "リセット中..."
+    },
+    "info": {
+      "title": "ユーザー情報",
+      "usernameLabel": "ユーザー名",
+      "usernamePlaceholder": "新しいユーザー名を入力",
+      "emailLabel": "メールアドレス",
+      "emailPlaceholder": "新しいメールアドレスを入力",
+      "userId": "ユーザーID"
+    },
+    "password": {
+      "title": "パスワードを変更",
+      "currentLabel": "現在のパスワード",
+      "currentPlaceholder": "現在のパスワードを入力",
+      "newLabel": "新しいパスワード",
+      "newPlaceholder": "新しいパスワードを入力",
+      "confirmLabel": "新しいパスワードを確認",
+      "confirmPlaceholder": "新しいパスワードを再入力",
+      "requirements": "パスワードは8文字以上で、大文字・小文字・数字・記号を含めてください。",
+      "submit": "パスワードを変更",
+      "updating": "更新中..."
+    },
+    "logout": "ログアウト",
+    "copy": {
+      "successTitle": "コピーしました",
+      "successMessage": "{{field}}をクリップボードにコピーしました。",
+      "unavailableMessage": "{{field}}はまだ利用できません。"
+    },
+    "alerts": {
+      "permissionTitle": "権限が必要です",
+      "permissionMessage": "アバターを選択するには写真ライブラリへのアクセスを許可してください。",
+      "unavailableTitle": "利用できません",
+      "avatarLoginRequired": "アバターを更新するにはサインインしてください。",
+      "profileLoginRequired": "プロフィールを更新するにはサインインしてください。",
+      "passwordLoginRequired": "パスワードを変更するにはサインインしてください。",
+      "avatarUpdateFailed": "アバターを更新できませんでした。",
+      "avatarResetFailed": "アバターをリセットできませんでした。",
+      "usernameUpdateFailed": "ユーザー名を更新できませんでした。",
+      "emailUpdateFailed": "メールアドレスを更新できませんでした。",
+      "passwordChangeFailed": "パスワードを変更できませんでした。",
+      "logoutFailed": "ログアウトできませんでした。もう一度お試しください。",
+      "imageMissing": "画像ファイルのURIが見つかりません。",
+      "uploadReadFailed": "選択したファイルを読み込めませんでした。"
+    },
+    "validation": {
+      "usernameRequired": "ユーザー名を入力してください。",
+      "usernameMin": "ユーザー名は2文字以上で入力してください。",
+      "emailRequired": "メールアドレスを入力してください。",
+      "emailInvalid": "有効なメールアドレスを入力してください。",
+      "passwordCurrent": "現在のパスワードを入力してください。",
+      "passwordLength": "新しいパスワードは8文字以上で入力してください。",
+      "passwordComplexity": "パスワードには大文字・小文字・数字・記号を含めてください。",
+      "passwordMismatch": "パスワードが一致していません。",
+      "passwordDifferent": "別のパスワードを選択してください。"
+    }
+  },
+  "navigation": {
+    "mainMenu": "メインメニュー",
+    "tabs": {
+      "home": "ホーム",
+      "settings": "設定",
+      "profile": "プロフィール"
+    },
+    "groups": {
+      "title": "グループ",
+      "create": "新しいグループ",
+      "details": "グループ"
+    },
+    "scanInvite": "招待をスキャン",
+    "friendQr": "友だちのQRコード",
+    "groupQr": "グループQRコード",
+    "scanReceipt": "レシートをスキャン",
+    "participants": "参加者",
+    "itemsSplit": "アイテムの分割",
+    "finish": "完了",
+    "history": "最近の明細",
+    "historyDetails": "明細の詳細"
   },
   "settings": {
     "language": {
-      "title": "Language",
-      "description": "Choose the language used across the app.",
+      "title": "言語",
+      "description": "アプリ全体で使用する言語を選択してください。",
       "options": {
-        "en": "English",
-        "ja": "Japanese",
-        "uz": "Uzbek"
+        "en": "英語",
+        "ja": "日本語",
+        "uz": "ウズベク語"
       }
     }
   }

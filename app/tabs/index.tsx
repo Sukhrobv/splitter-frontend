@@ -3,7 +3,8 @@ import React, { useEffect, useMemo } from 'react';
 import { Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { YStack, XStack, Text, View, Circle } from 'tamagui';
-import { ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
+import { Calculator, ScanLine, Users, UserPlus } from '@tamagui/lucide-icons';
+import { useTranslation } from 'react-i18next';
 
 import { ScreenContainer } from '@/shared/ui/ScreenContainer';
 import UserAvatar from '@/shared/ui/UserAvatar';
@@ -12,21 +13,25 @@ import type {
   SessionHistorySession,
 } from '@/features/sessions/api/history.api';
 import { useSessionsHistoryStore } from '@/features/sessions/model/history.store';
-import { Button } from '@/shared/ui/Button';
 
-const BULLET = '\u2022';
 const HOME_HISTORY_LIMIT = 10;
+const DEFAULT_CURRENCY = 'UZS';
 
-const formatSessionDate = (value?: string) => {
+const formatSessionDate = (value?: string, locale: string = 'en') => {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('uz-UZ', {
+  const options: Intl.DateTimeFormatOptions = {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
-  });
+  };
+  try {
+    return date.toLocaleString(locale, options);
+  } catch {
+    return date.toLocaleString(undefined, options);
+  }
 };
 
 function ActionButton({
@@ -100,13 +105,13 @@ function AvatarStack({ participants }: { participants: SessionHistoryParticipant
 function BillCard({
   title,
   sub,
-  amount,
+  amountLabel,
   participants,
   onPress,
 }: {
   title: string;
   sub: string;
-  amount: number;
+  amountLabel: string;
   participants: SessionHistoryParticipant[];
   onPress?: () => void;
 }) {
@@ -137,7 +142,7 @@ function BillCard({
             </Text>
           </YStack>
           <Text fontSize={14} lineHeight={22} fontWeight="700" color="#2ECC71">
-            UZS {amount.toLocaleString()}
+            {amountLabel}
           </Text>
         </XStack>
 
@@ -151,6 +156,7 @@ function BillCard({
 
 export default function HomePage() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const sessions = useSessionsHistoryStore(state => state.sessions);
   const loading = useSessionsHistoryStore(state => state.loading);
   const initialized = useSessionsHistoryStore(state => state.initialized);
@@ -190,28 +196,36 @@ export default function HomePage() {
             </Circle>
           </Pressable>
           <Text mt="$2" color="$gray10" fontSize={13}>
-            Scan invite
+            {t('home.scan.cta', 'Scan invite')}
           </Text>
         </YStack>
 
         <XStack w={358} jc="space-between" mb="$5">
-          <ActionButton title="Friends" icon={<Users size={18} />} onPress={openFriends} />
-          <ActionButton title="Groups" icon={<UserPlus size={18} />} onPress={openGroups} />
+          <ActionButton
+            title={t('home.actions.friends', 'Friends')}
+            icon={<Users size={18} />}
+            onPress={openFriends}
+          />
+          <ActionButton
+            title={t('home.actions.groups', 'Groups')}
+            icon={<UserPlus size={18} />}
+            onPress={openGroups}
+          />
         </XStack>
 
         <XStack w={358} jc="space-between" ai="center" mb="$3">
           <Text fontSize={18} fontWeight="600">
-            Recent bills
+            {t('home.recent.title', 'Recent bills')}
           </Text>
           <Pressable onPress={() => router.push('/tabs/sessions/history')}>
-            <Text color="#2ECC71">Show more</Text>
+            <Text color="#2ECC71">{t('home.recent.showMore', 'Show more')}</Text>
           </Pressable>
         </XStack>
 
         <YStack gap="$3" pb="$6">
           {loading && (
             <Text color="$gray10" fontSize={14}>
-              Yuklanmoqda...
+              {t('home.recent.loading', 'Loading recent bills...')}
             </Text>
           )}
           {error && (
@@ -221,19 +235,33 @@ export default function HomePage() {
           )}
           {!loading && !error && !recent.length && (
             <Text color="$gray10" fontSize={14}>
-              Hali hisoblar mavjud emas
+              {t('home.recent.empty', 'No bills yet')}
             </Text>
           )}
           {recent.map((bill) => {
             const participants = bill.participants ?? [];
-            const summary = `${formatSessionDate(bill.createdAt)} ${BULLET} ${participants.length} ishtirokchi`;
+            const participantsLabel = t('home.recent.participants', {
+              count: participants.length,
+            });
+            const summary = t('home.recent.summary', {
+              date: formatSessionDate(bill.createdAt, i18n.language),
+              participants: participantsLabel,
+            });
             const totalAmount = bill.totals?.grandTotal ?? 0;
+            const currency = bill.currency ?? DEFAULT_CURRENCY;
+            const amountLabel = t('home.recent.amount', {
+              currency,
+              amount: totalAmount.toLocaleString(i18n.language ?? 'en', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }),
+            });
             return (
               <BillCard
                 key={bill.sessionId}
-                title={bill.sessionName || 'Hisob'}
+                title={bill.sessionName || t('home.recent.fallbackName', 'Bill')}
                 sub={summary}
-                amount={totalAmount}
+                amountLabel={amountLabel}
                 participants={participants}
                 onPress={() =>
                   router.push({

@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  YStack, XStack, Input, Button, Paragraph, Separator, Spinner, Text
+  YStack,
+  XStack,
+  Input,
+  Button,
+  Paragraph,
+  Separator,
+  Spinner,
+  Text,
 } from 'tamagui';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Plus, Check, X as IconX, Crown } from '@tamagui/lucide-icons';
+import { useTranslation } from 'react-i18next';
+
 import { useGroupsStore } from '@/features/groups/model/groups.store';
 import { useFriendsStore } from '@/features/friends/model/friends.store';
 import UserAvatar from '@/shared/ui/UserAvatar';
@@ -12,38 +21,54 @@ import UserAvatar from '@/shared/ui/UserAvatar';
 function useAutoNotice() {
   const [text, setText] = useState<string | undefined>();
   const [kind, setKind] = useState<'success' | 'error' | undefined>();
+
   useEffect(() => {
     if (!text) return;
-    const t = setTimeout(() => { setText(undefined); setKind(undefined); }, 2200);
-    return () => clearTimeout(t);
+    const timeout = setTimeout(() => {
+      setText(undefined);
+      setKind(undefined);
+    }, 2200);
+    return () => clearTimeout(timeout);
   }, [text]);
+
   return {
-    ok: (t: string) => { setKind('success'); setText(t); },
-    err: (t: string) => { setKind('error'); setText(t); },
-    node: text ? <Paragraph col={kind === 'error' ? '$red10' : '$green10'}>{text}</Paragraph> : null,
+    ok: (message: string) => {
+      setKind('success');
+      setText(message);
+    },
+    err: (message: string) => {
+      setKind('error');
+      setText(message);
+    },
+    node: text ? (
+      <Paragraph col={kind === 'error' ? '$red10' : '$green10'}>{text}</Paragraph>
+    ) : null,
   };
 }
 
-function pickTitle(f: any) {
+function pickTitle(friend: any) {
   return (
-    f?.user?.displayName ||
-    f?.user?.username ||
-    f?.displayName ||
-    f?.username ||
-    `User #${f?.user?.id ?? f?.userId ?? f?.id}`
+    friend?.user?.displayName ||
+    friend?.user?.username ||
+    friend?.displayName ||
+    friend?.username ||
+    `User #${friend?.user?.id ?? friend?.userId ?? friend?.id}`
   );
 }
-function pickUniqueId(f: any): string | undefined {
-  return f?.user?.uniqueId ?? f?.uniqueId ?? undefined;
+
+function pickUniqueId(friend: any): string | undefined {
+  return friend?.user?.uniqueId ?? friend?.uniqueId ?? undefined;
 }
-function pickSubtitle(f: any) {
-  const uniqueId = pickUniqueId(f);
+
+function pickSubtitle(friend: any) {
+  const uniqueId = pickUniqueId(friend);
   return uniqueId ? `@${uniqueId.toLowerCase().replace('user#', 'user')}` : '';
 }
 
 export default function GroupCreateScreen() {
   const router = useRouter();
   const notice = useAutoNotice();
+  const { t } = useTranslation();
 
   const { createGroup, openGroup, addMember, removeMember, current, loading, clearCurrent } = useGroupsStore();
   const { friends, fetchAll: fetchFriends } = useFriendsStore();
@@ -52,7 +77,7 @@ export default function GroupCreateScreen() {
   const [creating, setCreating] = useState(false);
   const [groupId, setGroupId] = useState<number | undefined>(undefined);
   const [filter, setFilter] = useState('');
-  const [opUid, setOpUid] = useState<string | null>(null); // текущий uid в операции add/remove
+  const [opUid, setOpUid] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -65,43 +90,55 @@ export default function GroupCreateScreen() {
     }, [clearCurrent])
   );
 
-  useEffect(() => { if (!friends?.length) fetchFriends(); }, [friends?.length, fetchFriends]);
-  useEffect(() => { if (groupId) openGroup(groupId); }, [groupId, openGroup]);
+  useEffect(() => {
+    if (!friends?.length) fetchFriends();
+  }, [friends?.length, fetchFriends]);
 
-  // карта участников { UID_UPPER -> role }
+  useEffect(() => {
+    if (groupId) openGroup(groupId);
+  }, [groupId, openGroup]);
+
   const memberRole = useMemo(() => {
     const map = new Map<string, string>();
-    (current?.members ?? []).forEach(m => {
-      const u = (m?.uniqueId || '').toUpperCase();
-      if (u) map.set(u, m?.role || 'member');
+    (current?.members ?? []).forEach((member) => {
+      const key = (member?.uniqueId || '').toUpperCase();
+      if (key) map.set(key, member?.role || 'member');
     });
     return map;
   }, [current?.members]);
 
-  // весь список друзей, отфильтрованный поиском
+  useEffect(() => {
+    if (current?.group?.name) {
+      setName(current.group.name);
+    }
+  }, [current?.group?.name]);
+
   const rows = useMemo(() => {
-    const base = (friends ?? []).map((f: any) => {
-      const uid = pickUniqueId(f);
-      const label = pickTitle(f);
-      const subtitle = pickSubtitle(f);
-      const role = uid ? memberRole.get(uid.toUpperCase()) : undefined; // 'owner' | 'member' | undefined
+    const list = (friends ?? []).map((friend: any) => {
+      const uid = pickUniqueId(friend);
+      const label = pickTitle(friend);
+      const subtitle = pickSubtitle(friend);
+      const role = uid ? memberRole.get(uid.toUpperCase()) : undefined;
       return { uid, label, subtitle, role };
     });
-    if (!filter) return base;
+    if (!filter) return list;
     const q = filter.toLowerCase();
-    return base.filter(x => (x.label ?? '').toLowerCase().includes(q) || (x.uid ?? '').toLowerCase().includes(q));
+    return list.filter(
+      (item) =>
+        (item.label ?? '').toLowerCase().includes(q) || (item.uid ?? '').toLowerCase().includes(q)
+    );
   }, [friends, memberRole, filter]);
 
   async function onCreate() {
-    if (!name.trim()) return;
+    if (!name.trim() || creating) return;
     setCreating(true);
     try {
-      const g = await createGroup(name.trim());
-      setGroupId(g.id);
-      notice.ok('Group created');
-      await openGroup(g.id);
-    } catch (e: any) {
-      notice.err(e?.message ?? 'Failed to create');
+      const created = await createGroup(name.trim());
+      setGroupId(created.id);
+      notice.ok(t('groups.create.notice.success', 'Group created'));
+      await openGroup(created.id);
+    } catch (error: any) {
+      notice.err(error?.message ?? t('groups.create.notice.error', 'Failed to create group'));
     } finally {
       setCreating(false);
     }
@@ -110,28 +147,42 @@ export default function GroupCreateScreen() {
   async function onAdd(uid: string) {
     if (!groupId) return;
     setOpUid(uid);
-    try { await addMember(groupId, uid); await openGroup(groupId); }
-    catch (e:any) { notice.err(e?.message ?? 'Failed to add'); }
-    finally { setOpUid(null); }
+    try {
+      await addMember(groupId, uid);
+      await openGroup(groupId);
+      notice.ok(t('groups.create.notice.memberAdded', 'Member added'));
+    } catch (error: any) {
+      notice.err(error?.message ?? t('groups.create.notice.addFailed', 'Failed to add member'));
+    } finally {
+      setOpUid(null);
+    }
   }
 
   async function onRemove(uid: string) {
     if (!groupId) return;
     setOpUid(uid);
-    try { await removeMember(groupId, uid); await openGroup(groupId); }
-    catch (e:any) { notice.err(e?.message ?? 'Failed to remove'); }
-    finally { setOpUid(null); }
+    try {
+      await removeMember(groupId, uid);
+      await openGroup(groupId);
+      notice.ok(t('groups.create.notice.memberRemoved', 'Member removed'));
+    } catch (error: any) {
+      notice.err(error?.message ?? t('groups.create.notice.removeFailed', 'Failed to remove member'));
+    } finally {
+      setOpUid(null);
+    }
   }
 
   return (
     <YStack f={1} p="$4" gap="$3" bg="$background">
       <XStack>
         <Button onPress={() => router.replace('/tabs/groups' as never)} size="$2" w={124} h={22} br={6}>
-          Back to Groups
+          {t('groups.create.back', 'Back to Groups')}
         </Button>
       </XStack>
 
-      <Paragraph fow="700" fos="$7">Create group</Paragraph>
+      <Paragraph fow="700" fos="$7">
+        {t('groups.create.title', 'Create group')}
+      </Paragraph>
       {notice.node}
 
       <XStack gap="$2" ai="center">
@@ -139,46 +190,51 @@ export default function GroupCreateScreen() {
           f={1}
           value={name}
           onChangeText={setName}
-          placeholder="Group name"
+          placeholder={t('groups.create.namePlaceholder', 'Group name')}
           editable={!groupId}
           returnKeyType="done"
           onSubmitEditing={onCreate}
         />
         <Button onPress={onCreate} disabled={!!groupId || creating}>
-          {creating ? '...' : 'Create'}
+          {creating ? '...' : t('groups.create.action', 'Create')}
         </Button>
       </XStack>
 
       <Separator />
 
-      {/* unified friends list with inline add/remove */}
       {!groupId ? (
-        <Paragraph col="$gray10">Create a group to add members.</Paragraph>
+        <Paragraph col="$gray10">
+          {t('groups.create.emptyState', 'Create a group to add members.')}
+        </Paragraph>
       ) : loading && !current ? (
         <Spinner />
       ) : (
         <>
-          <Paragraph fow="700" fos="$6">Add or remove members</Paragraph>
+          <Paragraph fow="700" fos="$6">
+            {t('groups.create.manageMembers', 'Add or remove members')}
+          </Paragraph>
           <Input
             value={filter}
             onChangeText={setFilter}
-            placeholder="Search friends…"
+            placeholder={t('groups.create.searchPlaceholder', 'Search friends…')}
             returnKeyType="search"
           />
 
           {(rows ?? []).length === 0 ? (
-            <Paragraph col="$gray10">No friends to display</Paragraph>
+            <Paragraph col="$gray10">
+              {t('groups.create.noFriends', 'No friends to display')}
+            </Paragraph>
           ) : (
             <YStack borderWidth={1} borderColor="$gray5" borderRadius={8} overflow="hidden">
-              {rows.map((r, idx) => {
-                const isOwner = r.role === 'owner';
-                const isMember = !!r.role;
-                const busy = opUid === r.uid;
+              {rows.map((row, index) => {
+                const isOwner = row.role === 'owner';
+                const isMember = !!row.role;
+                const busy = opUid === row.uid;
+                const avatarLabel = (row.label || 'U').slice(0, 1).toUpperCase();
 
                 return (
-                  <>
+                  <React.Fragment key={row.uid ?? row.label ?? index}>
                     <XStack
-                      key={r.uid ?? r.label ?? idx}
                       h={60}
                       ai="center"
                       jc="space-between"
@@ -186,14 +242,25 @@ export default function GroupCreateScreen() {
                       bg="$background"
                     >
                       <XStack ai="center" gap="$3">
-                        <UserAvatar uri={r.avatarUrl ?? undefined} label={(r.label || "U").slice(0, 1).toUpperCase()} size={36} textSize={14} backgroundColor="$gray5" />
+                        <UserAvatar
+                          uri={row.avatarUrl ?? undefined}
+                          label={avatarLabel}
+                          size={36}
+                          textSize={14}
+                          backgroundColor="$gray5"
+                        />
                         <YStack>
-                          <Text fontSize={17} fontWeight="600">{r.label}</Text>
-                          {!!r.subtitle && <Paragraph fontSize={14} color="$gray10">{r.subtitle}</Paragraph>}
+                          <Text fontSize={17} fontWeight="600">
+                            {row.label}
+                          </Text>
+                          {!!row.subtitle && (
+                            <Paragraph fontSize={14} color="$gray10">
+                              {row.subtitle}
+                            </Paragraph>
+                          )}
                         </YStack>
                       </XStack>
 
-                      {/* status/action */}
                       <XStack ai="center" gap="$2">
                         {isOwner ? (
                           <Crown size={18} color="$yellow10" />
@@ -205,9 +272,10 @@ export default function GroupCreateScreen() {
                               chromeless
                               circular
                               icon={<IconX size={18} color="$red10" />}
-                              onPress={() => r.uid && onRemove(r.uid)}
-                              disabled={!r.uid || busy}
+                              onPress={() => row.uid && onRemove(row.uid)}
+                              disabled={!row.uid || busy}
                               pressStyle={{ bg: '$red3' }}
+                              aria-label={t('groups.create.removeMember', 'Remove member')}
                             />
                           </>
                         ) : (
@@ -216,15 +284,16 @@ export default function GroupCreateScreen() {
                             chromeless
                             circular
                             icon={<Plus size={18} color="$blue10" />}
-                            onPress={() => r.uid && onAdd(r.uid)}
-                            disabled={!r.uid || busy}
+                            onPress={() => row.uid && onAdd(row.uid)}
+                            disabled={!row.uid || busy}
                             pressStyle={{ bg: '$blue3' }}
+                            aria-label={t('groups.create.addMember', 'Add member')}
                           />
                         )}
                       </XStack>
                     </XStack>
-                    {idx < (rows.length - 1) && <Separator />}
-                  </>
+                    {index < rows.length - 1 && <Separator />}
+                  </React.Fragment>
                 );
               })}
             </YStack>
@@ -234,4 +303,3 @@ export default function GroupCreateScreen() {
     </YStack>
   );
 }
-

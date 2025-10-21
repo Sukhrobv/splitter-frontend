@@ -56,6 +56,130 @@
     "loading": "Loading...",
     "error": "Failed to load"
   },
+  "home": {
+    "header": {
+      "greeting": "Hi, {{name}}!",
+      "friendFallback": "friend"
+    },
+    "scan": {
+      "cta": "Scan invite"
+    },
+    "actions": {
+      "friends": "Friends",
+      "groups": "Groups"
+    },
+    "recent": {
+      "title": "Recent bills",
+      "showMore": "Show more",
+      "loading": "Loading recent bills...",
+      "empty": "No bills yet",
+      "summary": "{{date}} • {{participants}}",
+      "fallbackName": "Bill",
+      "participants": "{{count}} participants",
+      "participants_one": "{{count}} participant",
+      "participants_other": "{{count}} participants",
+      "amount": "{{currency}} {{amount}}"
+    },
+    "features": {
+      "title": "What you can do"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "status": {
+      "saved": "Saved"
+    },
+    "actions": {
+      "copy": "Copy"
+    },
+    "labels": {
+      "guest": "Guest",
+      "notAvailable": "N/A"
+    },
+    "avatar": {
+      "title": "Avatar",
+      "hint": "Uploaded avatars are delivered via our CDN and refresh instantly.",
+      "upload": "Upload from phone",
+      "uploading": "Uploading...",
+      "reset": "Reset avatar",
+      "resetting": "Resetting..."
+    },
+    "info": {
+      "title": "User information",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "Enter a new username",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Enter a new email",
+      "userId": "User ID"
+    },
+    "password": {
+      "title": "Change password",
+      "currentLabel": "Current password",
+      "currentPlaceholder": "Enter current password",
+      "newLabel": "New password",
+      "newPlaceholder": "Enter new password",
+      "confirmLabel": "Confirm new password",
+      "confirmPlaceholder": "Confirm new password",
+      "requirements": "Password must be at least 8 characters and include uppercase, lowercase, number, and special symbol.",
+      "submit": "Change password",
+      "updating": "Updating..."
+    },
+    "logout": "Log out",
+    "copy": {
+      "successTitle": "Copied",
+      "successMessage": "{{field}} copied to the clipboard.",
+      "unavailableMessage": "{{field}} is not available yet."
+    },
+    "alerts": {
+      "permissionTitle": "Permission needed",
+      "permissionMessage": "Please allow access to your photo library to pick an avatar.",
+      "unavailableTitle": "Unavailable",
+      "avatarLoginRequired": "Sign in to update your avatar.",
+      "profileLoginRequired": "Sign in to update your profile.",
+      "passwordLoginRequired": "Sign in to change your password.",
+      "avatarUpdateFailed": "Could not update the avatar.",
+      "avatarResetFailed": "Could not reset the avatar.",
+      "usernameUpdateFailed": "Could not update the username.",
+      "emailUpdateFailed": "Could not update the email.",
+      "passwordChangeFailed": "Could not change the password.",
+      "logoutFailed": "Could not log out. Please try again.",
+      "imageMissing": "Image file is missing a URI.",
+      "uploadReadFailed": "Unable to read the selected file for upload."
+    },
+    "validation": {
+      "usernameRequired": "Username cannot be empty",
+      "usernameMin": "Username must be at least 2 characters",
+      "emailRequired": "Email cannot be empty",
+      "emailInvalid": "Enter a valid email address",
+      "passwordCurrent": "Enter your current password",
+      "passwordLength": "New password must be at least 8 characters",
+      "passwordComplexity": "Password must include uppercase, lowercase, number, and special character",
+      "passwordMismatch": "Passwords do not match",
+      "passwordDifferent": "Choose a different password"
+    }
+  },
+  "navigation": {
+    "mainMenu": "Main menu",
+    "tabs": {
+      "home": "Home",
+      "settings": "Settings",
+      "profile": "Profile"
+    },
+    "groups": {
+      "title": "Groups",
+      "create": "New group",
+      "details": "Group"
+    },
+    "scanInvite": "Scan Invite",
+    "friendQr": "My Friend QR",
+    "groupQr": "Group QR",
+    "scanReceipt": "Scan Receipt",
+    "participants": "Participants",
+    "itemsSplit": "Items Split",
+    "finish": "Finish",
+    "history": "Recent bills",
+    "historyDetails": "Bill details"
+  },
   "settings": {
     "language": {
       "title": "Language",

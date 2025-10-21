@@ -44,6 +44,7 @@ export interface SessionHistorySession {
   totals: SessionHistoryTotals;
   participants: SessionHistoryParticipant[];
   allocations?: SessionHistoryAllocation[];
+  currency?: string;
 }
 
 export interface SessionHistoryLatestResponse {

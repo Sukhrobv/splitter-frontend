@@ -59,6 +59,7 @@ function SectionCard({ title, icon, children, successTrigger = 0 }: SectionCardP
 }
 
 function SuccessBadge({ trigger }: { trigger?: number }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.9)).current;
@@ -108,7 +109,7 @@ function SuccessBadge({ trigger }: { trigger?: number }) {
       <XStack ai="center" gap="$1">
         <CheckCircle size={16} color="#22c55e" />
         <Text fontSize={12} fontWeight="600" color="$green10">
-          Saved
+          {t('profile.status.saved', 'Saved')}
         </Text>
       </XStack>
     </Animated.View>
@@ -122,6 +123,7 @@ interface InfoRowProps {
 }
 
 function InfoRow({ label, value, onCopy }: InfoRowProps) {
+  const { t } = useTranslation();
   return (
     <YStack gap="$1">
       <Text fontSize={12} color="$gray9">
@@ -133,7 +135,7 @@ function InfoRow({ label, value, onCopy }: InfoRowProps) {
         </Text>
         {onCopy && (
           <Button size="$2" variant="outlined" icon={<Copy size={16} color="$gray11" />} onPress={onCopy}>
-            Copy
+            {t('profile.actions.copy', 'Copy')}
           </Button>
         )}
       </XStack>
@@ -172,6 +174,7 @@ function EditableFieldRow({
   onCopy,
   textInputProps,
 }: EditableFieldRowProps) {
+  const { t } = useTranslation();
   const animatedScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -233,7 +236,7 @@ function EditableFieldRow({
                   icon={<Copy size={16} color="$gray11" />}
                   onPress={onCopy}
                 >
-                  Copy
+                  {t('profile.actions.copy', 'Copy')}
                 </Button>
               )}
               <Button
@@ -272,7 +275,39 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const setLanguage = useAppStore((s) => s.setLanguage);
 
-  const displayName = user?.username || 'Guest';
+  const guestLabel = t('profile.labels.guest', 'Guest');
+  const notAvailableLabel = t('profile.labels.notAvailable', 'N/A');
+  const avatarTitle = t('profile.avatar.title', 'Avatar');
+  const avatarHint = t(
+    'profile.avatar.hint',
+    'Uploaded avatars are delivered via our CDN and refresh instantly.'
+  );
+  const avatarUploadLabel = t('profile.avatar.upload', 'Upload from phone');
+  const avatarUploadingLabel = t('profile.avatar.uploading', 'Uploading...');
+  const avatarResetLabel = t('profile.avatar.reset', 'Reset avatar');
+  const avatarResettingLabel = t('profile.avatar.resetting', 'Resetting...');
+  const userInfoTitle = t('profile.info.title', 'User information');
+  const usernameLabel = t('profile.info.usernameLabel', 'Username');
+  const usernamePlaceholder = t('profile.info.usernamePlaceholder', 'Enter a new username');
+  const emailLabel = t('profile.info.emailLabel', 'Email');
+  const emailPlaceholder = t('profile.info.emailPlaceholder', 'Enter a new email');
+  const userIdLabel = t('profile.info.userId', 'User ID');
+  const passwordTitle = t('profile.password.title', 'Change password');
+  const currentPasswordLabel = t('profile.password.currentLabel', 'Current password');
+  const currentPasswordPlaceholder = t('profile.password.currentPlaceholder', 'Enter current password');
+  const newPasswordLabel = t('profile.password.newLabel', 'New password');
+  const newPasswordPlaceholder = t('profile.password.newPlaceholder', 'Enter new password');
+  const confirmPasswordLabel = t('profile.password.confirmLabel', 'Confirm new password');
+  const confirmPasswordPlaceholder = t('profile.password.confirmPlaceholder', 'Confirm new password');
+  const passwordRequirements = t(
+    'profile.password.requirements',
+    'Password must be at least 8 characters and include uppercase, lowercase, number, and special symbol.'
+  );
+  const passwordSubmitLabel = t('profile.password.submit', 'Change password');
+  const passwordUpdatingLabel = t('profile.password.updating', 'Updating...');
+  const logoutLabel = t('profile.logout', 'Log out');
+
+  const displayName = user?.username || guestLabel;
   const userId = user?.uniqueId ?? '';
 
   const [previewUri, setPreviewUri] = useState<string | null>(user?.avatarUrl ?? null);
@@ -330,35 +365,52 @@ export default function ProfileScreen() {
     setSuccessCounters((prev) => ({ ...prev, [key]: prev[key] + 1 }));
   }, []);
 
-  const validateUsername = useCallback((value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) return 'Username cannot be empty';
-    if (trimmed.length < 2) return 'Username must be at least 2 characters';
-    return null;
-  }, []);
+  const validateUsername = useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+      if (!trimmed) return t('profile.validation.usernameRequired', 'Username cannot be empty');
+      if (trimmed.length < 2) return t('profile.validation.usernameMin', 'Username must be at least 2 characters');
+      return null;
+    },
+    [t]
+  );
 
-  const validateEmail = useCallback((value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) return 'Email cannot be empty';
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmed)) return 'Enter a valid email address';
-    return null;
-  }, []);
+  const validateEmail = useCallback(
+    (value: string) => {
+      const trimmed = value.trim();
+      if (!trimmed) return t('profile.validation.emailRequired', 'Email cannot be empty');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmed)) return t('profile.validation.emailInvalid', 'Enter a valid email address');
+      return null;
+    },
+    [t]
+  );
 
   const validatePasswordForm = useCallback(() => {
-    if (!currentPassword.trim()) return 'Enter your current password';
-    if (newPassword.length < 8) return 'New password must be at least 8 characters';
+    if (!currentPassword.trim()) {
+      return t('profile.validation.passwordCurrent', 'Enter your current password');
+    }
+    if (newPassword.length < 8) {
+      return t('profile.validation.passwordLength', 'New password must be at least 8 characters');
+    }
     const hasUppercase = /[A-Z]/.test(newPassword);
     const hasLowercase = /[a-z]/.test(newPassword);
     const hasNumber = /\d/.test(newPassword);
     const hasSymbol = /[^A-Za-z0-9\s]/.test(newPassword);
     if (!hasUppercase || !hasLowercase || !hasNumber || !hasSymbol) {
-      return 'Password must include uppercase, lowercase, number, and special character';
+      return t(
+        'profile.validation.passwordComplexity',
+        'Password must include uppercase, lowercase, number, and special character'
+      );
     }
-    if (newPassword !== confirmPassword) return 'Passwords do not match';
-    if (newPassword === currentPassword) return 'Choose a different password';
+    if (newPassword !== confirmPassword) {
+      return t('profile.validation.passwordMismatch', 'Passwords do not match');
+    }
+    if (newPassword === currentPassword) {
+      return t('profile.validation.passwordDifferent', 'Choose a different password');
+    }
     return null;
-  }, [confirmPassword, currentPassword, newPassword]);
+  }, [confirmPassword, currentPassword, newPassword, t]);
 
   useEffect(() => {
     if (usernameError) {
@@ -385,43 +437,57 @@ export default function ProfileScreen() {
     if (mediaPermission?.granted) return true;
     const response = await requestMediaPermission();
     if (response?.granted) return true;
-    Alert.alert('Permission needed', 'Please allow access to your photo library to pick an avatar.');
+    Alert.alert(
+      t('profile.alerts.permissionTitle', 'Permission needed'),
+      t(
+        'profile.alerts.permissionMessage',
+        'Please allow access to your photo library to pick an avatar.'
+      )
+    );
     return false;
-  }, [mediaPermission?.granted, requestMediaPermission]);
+  }, [mediaPermission?.granted, requestMediaPermission, t]);
 
-  const buildAvatarFormData = useCallback(async (asset: ImagePicker.ImagePickerAsset) => {
-    if (!asset.uri) {
-      throw new Error('Image file is missing a URI.');
-    }
-
-    const formData = new FormData();
-    const mimeType = asset.mimeType ?? 'image/jpeg';
-    const extension = mimeType.split('/').pop() || 'jpg';
-    const fileName = asset.fileName ?? `avatar.${extension}`;
-
-    if (Platform.OS === 'web') {
-      const response = await fetch(asset.uri);
-      if (!response.ok) {
-        throw new Error('Unable to read the selected file for upload.');
+  const buildAvatarFormData = useCallback(
+    async (asset: ImagePicker.ImagePickerAsset) => {
+      if (!asset.uri) {
+        throw new Error(t('profile.alerts.imageMissing', 'Image file is missing a URI.'));
       }
-      const blob = await response.blob();
-      formData.append('file', blob, fileName);
-    } else {
-      formData.append('file', {
-        uri: asset.uri,
-        name: fileName,
-        type: mimeType,
-      } as any);
-    }
 
-    return formData;
-  }, []);
+      const formData = new FormData();
+      const mimeType = asset.mimeType ?? 'image/jpeg';
+      const extension = mimeType.split('/').pop() || 'jpg';
+      const fileName = asset.fileName ?? `avatar.${extension}`;
+
+      if (Platform.OS === 'web') {
+        const response = await fetch(asset.uri);
+        if (!response.ok) {
+          throw new Error(
+            t('profile.alerts.uploadReadFailed', 'Unable to read the selected file for upload.')
+          );
+        }
+        const blob = await response.blob();
+        formData.append('file', blob, fileName);
+      } else {
+        formData.append('file', {
+          uri: asset.uri,
+          name: fileName,
+          type: mimeType,
+        } as any);
+      }
+
+      return formData;
+    },
+    [t]
+  );
 
   const handleUploadSelectedAsset = useCallback(
     async (asset: ImagePicker.ImagePickerAsset) => {
       if (!asset) return;
       if (!user) {
-        Alert.alert('Unavailable', 'Sign in to update your avatar.');
+        Alert.alert(
+          t('profile.alerts.unavailableTitle', 'Unavailable'),
+          t('profile.alerts.avatarLoginRequired', 'Sign in to update your avatar.')
+        );
         return;
       }
 
@@ -434,13 +500,14 @@ export default function ProfileScreen() {
         triggerSuccess('avatar');
       } catch (error) {
         console.error('Avatar upload error:', error);
-        const message = error instanceof Error ? error.message : 'Could not update the avatar.';
-        Alert.alert('Error', message);
+        const fallback = t('profile.alerts.avatarUpdateFailed', 'Could not update the avatar.');
+        const message = error instanceof Error && error.message ? error.message : fallback;
+        Alert.alert(t('common.error', 'Error'), message);
       } finally {
         setIsSavingAvatar(false);
       }
     },
-    [buildAvatarFormData, setUser, triggerSuccess, user]
+    [buildAvatarFormData, setUser, t, triggerSuccess, user]
   );
 
   const handlePickFromLibrary = useCallback(async () => {
@@ -453,7 +520,13 @@ export default function ProfileScreen() {
   }, [ensureMediaPermission, handleUploadSelectedAsset]);
 
   const handleResetAvatar = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      Alert.alert(
+        t('profile.alerts.unavailableTitle', 'Unavailable'),
+        t('profile.alerts.avatarLoginRequired', 'Sign in to update your avatar.')
+      );
+      return;
+    }
     try {
       setIsResettingAvatar(true);
       try {
@@ -468,24 +541,45 @@ export default function ProfileScreen() {
       triggerSuccess('avatar');
     } catch (error) {
       console.error('Reset avatar error:', error);
-      Alert.alert('Error', 'Could not reset the avatar.');
+      Alert.alert(
+        t('common.error', 'Error'),
+        t('profile.alerts.avatarResetFailed', 'Could not reset the avatar.')
+      );
     } finally {
       setIsResettingAvatar(false);
     }
-  }, [setUser, triggerSuccess, user]);
+  }, [setUser, t, triggerSuccess, user]);
 
-  const handleCopy = useCallback(async (label: string, value: string | null | undefined) => {
-    if (!value) {
-      Alert.alert('Unavailable', `${label} is not available yet.`);
-      return;
-    }
-    await Clipboard.setStringAsync(value);
-    Alert.alert('Copied', `${label} copied to the clipboard.`);
-  }, []);
+  const handleCopy = useCallback(
+    async (label: string, value: string | null | undefined) => {
+      if (!value) {
+        Alert.alert(
+          t('profile.alerts.unavailableTitle', 'Unavailable'),
+          t('profile.copy.unavailableMessage', {
+            field: label,
+            defaultValue: `${label} is not available yet.`,
+          })
+        );
+        return;
+      }
+      await Clipboard.setStringAsync(value);
+      Alert.alert(
+        t('profile.copy.successTitle', 'Copied'),
+        t('profile.copy.successMessage', {
+          field: label,
+          defaultValue: `${label} copied to the clipboard.`,
+        })
+      );
+    },
+    [t]
+  );
 
   const handleSaveUsername = useCallback(async () => {
     if (!user) {
-      Alert.alert('Unavailable', 'Sign in to update your profile.');
+      Alert.alert(
+        t('profile.alerts.unavailableTitle', 'Unavailable'),
+        t('profile.alerts.profileLoginRequired', 'Sign in to update your profile.')
+      );
       return;
     }
 
@@ -509,15 +603,19 @@ export default function ProfileScreen() {
       usernameResetTimer.current = setTimeout(() => setUsernameStatus('idle'), 1600);
     } catch (error) {
       console.error('Username update failed:', error);
-      const message = error instanceof Error ? error.message : 'Could not update the username.';
-      Alert.alert('Error', message);
+      const fallback = t('profile.alerts.usernameUpdateFailed', 'Could not update the username.');
+      const message = error instanceof Error && error.message ? error.message : fallback;
+      Alert.alert(t('common.error', 'Error'), message);
       setUsernameStatus('idle');
     }
-  }, [setUser, user, usernameDraft, validateUsername]);
+  }, [setUser, t, user, usernameDraft, validateUsername]);
 
   const handleSaveEmail = useCallback(async () => {
     if (!user) {
-      Alert.alert('Unavailable', 'Sign in to update your profile.');
+      Alert.alert(
+        t('profile.alerts.unavailableTitle', 'Unavailable'),
+        t('profile.alerts.profileLoginRequired', 'Sign in to update your profile.')
+      );
       return;
     }
 
@@ -541,15 +639,19 @@ export default function ProfileScreen() {
       emailResetTimer.current = setTimeout(() => setEmailStatus('idle'), 1600);
     } catch (error) {
       console.error('Email update failed:', error);
-      const message = error instanceof Error ? error.message : 'Could not update the email.';
-      Alert.alert('Error', message);
+      const fallback = t('profile.alerts.emailUpdateFailed', 'Could not update the email.');
+      const message = error instanceof Error && error.message ? error.message : fallback;
+      Alert.alert(t('common.error', 'Error'), message);
       setEmailStatus('idle');
     }
-  }, [emailDraft, setUser, user, validateEmail]);
+  }, [emailDraft, setUser, t, user, validateEmail]);
 
   const handleChangePassword = useCallback(async () => {
     if (!user) {
-      Alert.alert('Unavailable', 'Sign in to change your password.');
+      Alert.alert(
+        t('profile.alerts.unavailableTitle', 'Unavailable'),
+        t('profile.alerts.passwordLoginRequired', 'Sign in to change your password.')
+      );
       return;
     }
 
@@ -569,18 +671,33 @@ export default function ProfileScreen() {
       triggerSuccess('password');
     } catch (err) {
       console.error('Password change failed:', err);
-      const message = err instanceof Error ? err.message : 'Could not change the password.';
-      Alert.alert('Error', message);
+      const fallback = t('profile.alerts.passwordChangeFailed', 'Could not change the password.');
+      const message = err instanceof Error && err.message ? err.message : fallback;
+      Alert.alert(t('common.error', 'Error'), message);
     } finally {
       setIsChangingPassword(false);
     }
-  }, [changePassword, confirmPassword, currentPassword, newPassword, triggerSuccess, user, validatePasswordForm]);
+  }, [
+    changePassword,
+    confirmPassword,
+    currentPassword,
+    newPassword,
+    t,
+    triggerSuccess,
+    user,
+    validatePasswordForm,
+  ]);
 
   const handleLogout = useCallback(() => {
     logout()
       .then(() => router.replace({ pathname: '/' }))
-      .catch(() => Alert.alert('Error', 'Could not log out. Please try again.'));
-  }, [logout, router]);
+      .catch(() =>
+        Alert.alert(
+          t('common.error', 'Error'),
+          t('profile.alerts.logoutFailed', 'Could not log out. Please try again.')
+        )
+      );
+  }, [logout, router, t]);
 
   const isResetDisabled = isResettingAvatar || (!user?.avatarUrl && !previewUri);
 
@@ -600,19 +717,19 @@ export default function ProfileScreen() {
             <YStack gap="$3" pb="$6">
               {/* Avatar */}
               <SectionCard
-                title="Avatar"
+                title={avatarTitle}
                 icon={<Upload size={18} color="$gray11" />}
                 successTrigger={successCounters.avatar}
               >
                 <YStack ai="center" gap="$3">
                   <UserAvatar
                     uri={previewUri ?? undefined}
-                    label={(displayName || 'Guest').slice(0, 1).toUpperCase()}
+                    label={displayName.slice(0, 1).toUpperCase()}
                     size={96}
                     textSize={34}
                   />
                   <Text fontSize={12} color="$gray10">
-                    Uploaded avatars are delivered via our CDN and refresh instantly.
+                    {avatarHint}
                   </Text>
                   <XStack gap="$2" w="100%">
                     <Button
@@ -624,7 +741,7 @@ export default function ProfileScreen() {
                       disabled={isSavingAvatar}
                       onPress={handlePickFromLibrary}
                     >
-                      {isSavingAvatar ? 'Uploading...' : 'Upload from phone'}
+                      {isSavingAvatar ? avatarUploadingLabel : avatarUploadLabel}
                     </Button>
                     <Button
                       flex={1}
@@ -634,36 +751,39 @@ export default function ProfileScreen() {
                       disabled={isResetDisabled}
                       onPress={handleResetAvatar}
                     >
-                      {isResettingAvatar ? 'Resetting...' : 'Reset avatar'}
+                      {isResettingAvatar ? avatarResettingLabel : avatarResetLabel}
                     </Button>
                   </XStack>
                 </YStack>
               </SectionCard>
 
               {/* Language */}
-              <SectionCard title="Language" icon={/* оставь свою иконку */ <Languages size={18} color="$gray11" />}>
-  <YStack gap="$2">
-    <Text fontSize={12} color="$gray9">
-      {t('settings.language.description', 'Choose the language used across the app.')}
-    </Text>
+              <SectionCard
+                title={t('settings.language.title', 'Language')}
+                icon={<Languages size={18} color="$gray11" />}
+              >
+                <YStack gap="$2">
+                  <Text fontSize={12} color="$gray9">
+                    {t('settings.language.description', 'Choose the language used across the app.')}
+                  </Text>
 
-    <LanguageSegmentedControl
-      value={language}
-      onChange={(code) => setLanguage(code)}
-      getLabel={(code, fallback) => t(`settings.language.options.${code}`, fallback)}
-    />
-  </YStack>
-</SectionCard>
+                  <LanguageSegmentedControl
+                    value={language}
+                    onChange={(code) => setLanguage(code)}
+                    getLabel={(code, fallback) => t(`settings.language.options.${code}`, fallback)}
+                  />
+                </YStack>
+              </SectionCard>
 
 
               {/* User info */}
-              <SectionCard title="User information" icon={<UserIcon size={18} color="$gray11" />}>
+              <SectionCard title={userInfoTitle} icon={<UserIcon size={18} color="$gray11" />}>
                 <EditableFieldRow
-                  label="Username"
+                  label={usernameLabel}
                   value={user?.username ?? ''}
                   draft={usernameDraft}
                   setDraft={setUsernameDraft}
-                  placeholder="Enter a new username"
+                  placeholder={usernamePlaceholder}
                   isEditing={isEditingUsername}
                   onStartEdit={() => setIsEditingUsername(true)}
                   onCancelEdit={() => {
@@ -674,15 +794,15 @@ export default function ProfileScreen() {
                   onSave={handleSaveUsername}
                   status={usernameStatus}
                   error={usernameError}
-                  onCopy={() => handleCopy('Username', user?.username)}
+                  onCopy={() => handleCopy(usernameLabel, user?.username)}
                 />
                 <Separator />
                 <EditableFieldRow
-                  label="Email"
+                  label={emailLabel}
                   value={user?.email ?? ''}
                   draft={emailDraft}
                   setDraft={setEmailDraft}
-                  placeholder="Enter a new email"
+                  placeholder={emailPlaceholder}
                   isEditing={isEditingEmail}
                   onStartEdit={() => setIsEditingEmail(true)}
                   onCancelEdit={() => {
@@ -693,38 +813,46 @@ export default function ProfileScreen() {
                   onSave={handleSaveEmail}
                   status={emailStatus}
                   error={emailError}
-                  onCopy={() => handleCopy('Email', user?.email)}
+                  onCopy={() => handleCopy(emailLabel, user?.email)}
                   textInputProps={{ keyboardType: 'email-address', autoCapitalize: 'none', autoCorrect: false }}
                 />
                 <Separator />
-                <InfoRow label="User ID" value={userId || 'N/A'} onCopy={() => handleCopy('User ID', userId)} />
+                <InfoRow
+                  label={userIdLabel}
+                  value={userId || notAvailableLabel}
+                  onCopy={() => handleCopy(userIdLabel, userId)}
+                />
               </SectionCard>
 
               {/* Password */}
-              <SectionCard title="Change password" icon={<Lock size={18} color="$gray11" />} successTrigger={successCounters.password}>
+              <SectionCard
+                title={passwordTitle}
+                icon={<Lock size={18} color="$gray11" />}
+                successTrigger={successCounters.password}
+              >
                 <YStack gap="$3">
                   <PasswordInput
-                    label="Current password"
+                    label={currentPasswordLabel}
                     value={currentPassword}
                     onChangeText={setCurrentPassword}
-                    placeholder="Enter current password"
+                    placeholder={currentPasswordPlaceholder}
                     textInputProps={{ returnKeyType: 'next' }}
                   />
                   <PasswordInput
-                    label="New password"
+                    label={newPasswordLabel}
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="Enter new password"
+                    placeholder={newPasswordPlaceholder}
                     textInputProps={{ returnKeyType: 'next' }}
                   />
                   <Text fontSize={12} color="$gray10">
-                    Password must be at least 8 characters and include uppercase, lowercase, number, and special symbol.
+                    {passwordRequirements}
                   </Text>
                   <PasswordInput
-                    label="Confirm new password"
+                    label={confirmPasswordLabel}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Confirm new password"
+                    placeholder={confirmPasswordPlaceholder}
                     error={passwordError || undefined}
                     textInputProps={{ returnKeyType: 'done' }}
                   />
@@ -735,7 +863,7 @@ export default function ProfileScreen() {
                     disabled={isChangingPassword}
                     onPress={handleChangePassword}
                   >
-                    {isChangingPassword ? 'Updating...' : 'Change password'}
+                    {isChangingPassword ? passwordUpdatingLabel : passwordSubmitLabel}
                   </Button>
                 </YStack>
               </SectionCard>
@@ -750,7 +878,7 @@ export default function ProfileScreen() {
                 icon={<LogOut size={18} color="$red11" />}
                 onPress={handleLogout}
               >
-                Log out
+                {logoutLabel}
               </Button>
             </YStack>
           </ScreenContainer>
