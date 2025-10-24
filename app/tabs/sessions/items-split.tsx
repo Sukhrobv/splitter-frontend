@@ -334,20 +334,17 @@ export default function ItemsSplitScreen() {
   );
 
   const commitItems = useCallback(
-    (updater: (prev: Item[]) => Item[]) => {
-      setLocalItems((prev) => {
-        const next = updater(prev);
-        const changed =
-          next.length !== prev.length || next.some((item, index) => item !== prev[index]);
-        if (!changed) {
-          return prev;
-        }
-        setStoreItems(toStoreItems(next));
-        return next;
-      });
-    },
-    [setStoreItems]
-  );
+  (updater: (prev: Item[]) => Item[]) => {
+    setLocalItems((prev) => updater(prev));
+  },
+  []
+);
+
+// 2) Синхронизация в эффекте
+useEffect(() => {
+  // если нужно – добавьте лёгкую проверку, чтобы не дёргать зря
+  setStoreItems(toStoreItems(items));
+}, [items, setStoreItems]);
 
   // --- derived ---
   const isAssigned = (it: Item) => {
