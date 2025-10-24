@@ -24,6 +24,7 @@ export interface ParsedReceiptItem {
 
 export interface ReceiptSummary {
   grandTotal: number;
+  currency?: string; // ✅ Валюта в summary
   [key: string]: unknown;
 }
 
@@ -58,6 +59,7 @@ export interface FinalizeReceiptRequest {
   sessionName: string;
   participants: ReceiptParticipant[];
   items: FinalizeReceiptItemPayload[];
+  currency?: string; // ✅ Добавьте валюту в запрос
 }
 
 export interface FinalizeTotalsByParticipant {
@@ -87,6 +89,7 @@ export interface FinalizeReceiptResponse {
   createdAt: string;
   totals: {
     grandTotal: number;
+    currency?: string; // ✅ Добавьте валюту в ответ
     byParticipant?: FinalizeTotalsByParticipant[];
     byItem?: FinalizeTotalsByItem[];
   };
@@ -101,19 +104,32 @@ const normalizeError = (error: unknown): Error => {
 export const ReceiptApi = {
   async parse(payload: ParseReceiptRequest): Promise<ParseReceiptResponse> {
     try {
+      // console.log('[API] POST /sessions/scan');
+      // console.log('[API] Request data:', JSON.stringify(payload, null, 2));
+
       const { data } = await apiClient.post<ParseReceiptResponse>('/sessions/scan', payload);
+
+      console.log('[API] Response:', JSON.stringify(data, null, 2));
       return data;
     } catch (error) {
+      console.error('[API] Error (parse):', error);
       throw normalizeError(error);
     }
   },
 
   async finalize(payload: FinalizeReceiptRequest): Promise<FinalizeReceiptResponse> {
     try {
+      console.log('[API] POST /sessions/finalize');
+      console.log('[API] Request data:', JSON.stringify(payload, null, 2));
+
       const { data } = await apiClient.post<FinalizeReceiptResponse>('/sessions/finalize', payload);
+
+      console.log('[API] Response:', JSON.stringify(data, null, 2));
       return data;
     } catch (error) {
+      console.error('[API] Error (finalize):', error);
       throw normalizeError(error);
     }
   },
 };
+

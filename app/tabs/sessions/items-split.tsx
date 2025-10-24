@@ -228,13 +228,6 @@ const parseParticipantsParam = (raw?: string): Participant[] => {
   }
 };
 
-const fmtUZS = (n: number) => `UZS ${Math.round(n).toLocaleString('en-US')}`;
-
-const getCurrencyParts = (n: number) => {
-  const [currency, ...rest] = fmtUZS(n).split(' ');
-  return { currency, amount: rest.join(' ') || '0' };
-};
-
 export default function ItemsSplitScreen() {
   const { participants: participantsParam, receiptId } = useLocalSearchParams<{
     participants?: string;
@@ -248,6 +241,19 @@ export default function ItemsSplitScreen() {
   const storeItems = useReceiptSessionStore((s) => s.items);
   const storeParticipants = useReceiptSessionStore((s) => s.participants);
   const setStoreItems = useReceiptSessionStore((s) => s.setItems);
+
+  const storeCurrency = useReceiptSessionStore((s) => s.currency);
+
+  const fmtCurrency = useCallback((n: number) => {
+    const currency = storeCurrency || 'UZS';
+    return `${currency} ${Math.round(n).toLocaleString('en-US')}`;
+  }, [storeCurrency]);
+
+  const getCurrencyParts = useCallback((n: number) => {
+    const formatted = fmtCurrency(n);
+    const [currency, ...rest] = formatted.split(' ');
+    return { currency, amount: rest.join(' ') || '0' };
+  }, [fmtCurrency]);
 
   const [items, setLocalItems] = useState<Item[]>([]);
 
@@ -565,27 +571,27 @@ export default function ItemsSplitScreen() {
 
   // --- finalize and navigate ---
   const onContinue = useCallback(async () => {
-    if (!canContinue || finalizing) return;
+  if (!canContinue || finalizing) return;
 
-    setSubmitError(null);
-    setFinalizing(true);
+  setSubmitError(null);
+  setFinalizing(true);
 
-    try {
-      setStoreItems(toStoreItems(items));
+  try {
+    setStoreItems(toStoreItems(items));
 
-      const finalizeItems: FinalizeReceiptItemPayload[] = items.map((item) => {
-  const mode = ensureMode(item);
+    const finalizeItems: FinalizeReceiptItemPayload[] = items.map((item) => {
+      const mode = ensureMode(item);
 
-  const payload: FinalizeReceiptItemPayload = {
-    id: item.id,
-    name: item.name,
-    price: item.price,
-    quantity: item.quantity,
-    kind: item.kind,
-    splitMode: mode,
-    assignedTo: mode === 'equal' ? (item.assignedTo || []) : undefined,
-    perPersonCount: mode === 'count' ? (item.perPersonCount || {}) : undefined,
-  };
+      const payload: FinalizeReceiptItemPayload = {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        kind: item.kind,
+        splitMode: mode,
+        assignedTo: mode === 'equal' ? (item.assignedTo || []) : undefined,
+        perPersonCount: mode === 'count' ? (item.perPersonCount || {}) : undefined,
+      };
 
   // Debug log
   console.log('Finalizing item:', {
@@ -600,24 +606,25 @@ export default function ItemsSplitScreen() {
 });
 
       const effectiveSessionId =
-        session?.sessionId ??
-        (sessionReceiptId && !isMockSession ? parseInt(sessionReceiptId, 10) : undefined);
+      session?.sessionId ??
+      (sessionReceiptId && !isMockSession ? parseInt(sessionReceiptId, 10) : undefined);
 
-      if (!effectiveSessionId) {
-        throw new Error('Session ID is required');
-      }
+    if (!effectiveSessionId) {
+      throw new Error('Session ID is required');
+    }
 
       const fallbackFinalization = buildLocalFinalization(items, participants);
 
       const result = await ReceiptApi.finalize({
-        sessionId: effectiveSessionId,
-        sessionName: session?.sessionName || 'Split Session',
-        participants: participants.map((p) => ({
-          uniqueId: p.uniqueId,
-          username: p.username,
-        })),
-        items: finalizeItems,
-      });
+      sessionId: effectiveSessionId,
+      sessionName: session?.sessionName || 'Split Session',
+      participants: participants.map((p) => ({
+        uniqueId: p.uniqueId,
+        username: p.username,
+      })),
+      items: finalizeItems,
+      currency: storeCurrency, // ✅ Добавьте эту строку
+    });
 
       const backendByParticipant = result.totals?.byParticipant ?? [];
       const hasBackendByParticipant = backendByParticipant.length > 0;
@@ -644,6 +651,8 @@ export default function ItemsSplitScreen() {
           ? result.totals.grandTotal
           : fallbackFinalization.grandTotal;
 
+      const finalCurrency = result.totals?.currency || storeCurrency;
+
       const finishPayload = {
   sessionId: result.sessionId,
   sessionName: result.sessionName,
@@ -653,6 +662,7 @@ export default function ItemsSplitScreen() {
   totalsByItem,
   allocations,
   grandTotal,
+  currency: finalCurrency,
   status: result.status,
   createdAt: result.createdAt,
 };
@@ -691,6 +701,7 @@ export default function ItemsSplitScreen() {
     sessionReceiptId,
     isMockSession,
     participants,
+    storeCurrency,
     setStoreItems,
     router,
     resetState,
@@ -820,7 +831,7 @@ export default function ItemsSplitScreen() {
               } else if (singleOwner) {
                 summaryText = ownerName ?? '';
               } else if (it.quantity > 1) {
-                summaryText = `1x ${fmtUZS(it.price)}`;
+                summaryText = `1x ${fmtCurrency(it.price)}`;
               }
 
               const showUnitIcon = it.quantity > 1 && summaryText !== '';
@@ -1105,7 +1116,7 @@ export default function ItemsSplitScreen() {
                 </Text>
                 <Text fontSize={12} color="#2ECC71">
                   Price split equally:{' '}
-                  {fmtUZS(editingTotal / Math.max(1, editing.assignedTo.length))} each
+                  {fmtCurrency(editingTotal / Math.max(1, editing.assignedTo.length))} each
                 </Text>
               </YStack>
             )}
@@ -1118,7 +1129,7 @@ export default function ItemsSplitScreen() {
                     unit(s) assigned
                   </Text>
                   <Text fontSize={12} color="#2ECC71">
-                    Per unit: {fmtUZS(editingItem?.price || 0)}
+                    Per unit: {fmtCurrency(editingItem?.price || 0)}
                   </Text>
                 </YStack>
               )}

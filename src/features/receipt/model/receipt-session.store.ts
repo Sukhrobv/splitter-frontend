@@ -44,6 +44,7 @@ interface ReceiptSessionStore {
   session?: ReceiptSessionMeta;
   items: ReceiptSplitItem[];
   participants: ReceiptParticipant[];
+  currency: string; // ✅ Добавлено поле для валюты
   finalizing: boolean;
   finalizeError?: string;
   finalized?: FinalizeReceiptResponse;
@@ -52,6 +53,7 @@ interface ReceiptSessionStore {
   clearCapture: () => void;
   setSessionName: (sessionName: string) => void;
   setParticipants: (participants: ReceiptParticipant[]) => void;
+  setCurrency: (currency: string) => void; // ✅ Добавлен метод
   updateItem: (itemId: string, updater: (prev: ReceiptSplitItem) => ReceiptSplitItem) => void;
   setItems: (items: ReceiptSplitItem[]) => void;
 
@@ -61,7 +63,7 @@ interface ReceiptSessionStore {
 }
 
 const INITIAL_STATE: Pick<ReceiptSessionStore,
-  'capture' | 'parsing' | 'parseError' | 'session' | 'items' | 'participants' | 'finalizing' | 'finalizeError' | 'finalized'
+  'capture' | 'parsing' | 'parseError' | 'session' | 'items' | 'participants' | 'currency' | 'finalizing' | 'finalizeError' | 'finalized'
 > = {
   capture: undefined,
   parsing: false,
@@ -69,6 +71,7 @@ const INITIAL_STATE: Pick<ReceiptSessionStore,
   session: undefined,
   items: [],
   participants: [],
+  currency: 'UZS', // ✅ Значение по умолчанию
   finalizing: false,
   finalizeError: undefined,
   finalized: undefined,
@@ -88,6 +91,8 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
   },
 
   setParticipants: (participants) => set({ participants }),
+
+  setCurrency: (currency) => set({ currency }), // ✅ Новый метод
 
   updateItem: (itemId, updater) => {
     set((state) => ({
@@ -113,6 +118,9 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
         perPersonCount: {},
       }));
 
+      // ✅ Извлекаем валюту из ответа API
+      const detectedCurrency = response.summary?.currency || 'UZS';
+
       set({
         parsing: false,
         parseError: undefined,
@@ -124,6 +132,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
         },
         items: splitItems,
         participants: [],
+        currency: detectedCurrency, // ✅ Сохраняем валюту
         finalized: undefined,
         finalizeError: undefined,
       });
@@ -137,7 +146,7 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
   },
 
   finalizeSession: async () => {
-    const { session, participants, items } = get();
+    const { session, participants, items, currency } = get();
     if (!session) throw new Error('No session to finalize');
     if (participants.length === 0) throw new Error('Add at least one participant');
 
@@ -159,7 +168,12 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
         sessionName: session.sessionName,
         participants,
         items: payloadItems,
+        currency,
       });
+
+       if (response.totals?.currency) {
+      set({ currency: response.totals.currency });
+    }
 
       set({ finalizing: false, finalized: response, finalizeError: undefined });
       return response;
@@ -172,6 +186,3 @@ export const useReceiptSessionStore = create<ReceiptSessionStore>((set, get) => 
 
   reset: () => set({ ...INITIAL_STATE }),
 }));
-
-
-
