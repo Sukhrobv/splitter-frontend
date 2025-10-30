@@ -13,7 +13,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.Sukhrob.receiptsplitter",
+      "package": "com.jduapp.receiptsplitter",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
@@ -39,9 +39,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7917fbd1-3481-434b-a412-0ed16df7bda4"
+        "projectId": "05fc7a2d-813f-4121-9103-860ef1313a37"
       }
     },
-    "owner": "sukhrob3"
+    "owner": "jduapp"
   }
 }

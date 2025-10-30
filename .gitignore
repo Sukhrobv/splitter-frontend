@@ -8,6 +8,8 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
+android/
+ios/
 
 # Native
 .kotlin/
@@ -42,3 +44,7 @@ local.properties
 
 # typescript
 *.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
