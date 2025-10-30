@@ -6,7 +6,7 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'expo-router/babel',
+      // removed deprecated 'expo-router/babel' (use 'babel-preset-expo' in SDK 50+)
       // Отключаем Tamagui babel plugin для production сборки
       // Это уберет оптимизацию, но решит проблему со сборкой
       ...(!isProduction ? [

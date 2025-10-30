@@ -1,33 +1,30 @@
 {
-  "cli": { 
+  "cli": {
     "appVersionSource": "remote",
-    "version": ">= 5.2.0"
+    "requireCommit": true
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "development",
+      "channel": "development"
+    },
+    "ios-simulator": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      }
+    },
     "preview": {
       "distribution": "internal",
-      "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "http://54.178.11.40:8080",
-        "EXPO_PUBLIC_API_TIMEOUT": "10000",
-        "NODE_ENV": "production",
-        "EXPO_PUBLIC_DEBUG_API": "false"
-      },
-      "node": "20.18.0"
+      "environment": "preview",
+      "channel": "preview"
     },
     "production": {
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "http://54.178.11.40:8080",
-        "EXPO_PUBLIC_API_TIMEOUT": "10000",
-        "NODE_ENV": "production",
-        "EXPO_PUBLIC_DEBUG_API": "false"
-      }
+      "autoIncrement": true,
+      "environment": "production",
+      "channel": "production"
     }
   }
 }
